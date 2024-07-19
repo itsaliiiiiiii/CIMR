@@ -13,7 +13,8 @@ app.use(cors());
 app.use(bodyParser.json());
 app.use(bodyParser.urlencoded({ extended: true }));
 
-app.use('/api', routes);
+app.use('/cimr', routes);
+
 
 app.listen(port, () => {
     console.log(`Serveur en cours d'exécution sur le port ${port}`);

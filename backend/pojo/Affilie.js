@@ -10,3 +10,5 @@ class Affilie {
         this.numeroIdentite = numeroIdentite;
     }
 }
+
+module.exports = Affilie;

@@ -1,0 +1,39 @@
+$primary-back-color : #f0f2f5;
+$primary-color : #92b53e;
+$secondary-color : #eec543;
+$third-color : #7f7c7d;
+
+body {
+    margin: 0;
+    padding: 0;
+
+    button {
+        background-color: $primary-color !important;
+        border: $secondary-color 1px solid !important;
+        border-color: $secondary-color;
+    }
+
+    button:hover {
+        background-color: $secondary-color !important;
+        border-color: $secondary-color;
+    }
+
+    input:focus {
+        border-color: $secondary-color !important;
+        box-shadow: 0 0 0 0.1rem $secondary-color !important;
+        outline: none;
+    }
+}
+
+.navbar {
+    height: 10%;
+    margin-top: 50px !important;
+}
+
+#loginForm {
+    margin-top: 50px;
+    margin-bottom: 50px;
+    .form{
+        margin: 50px 0 !important;
+    }
+}

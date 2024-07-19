@@ -1,5 +1,5 @@
-const { RendezVousDao } = require('./RendezVousDao');
-const RendezVous = require('./RendezVous');
+const { RendezVousDao } = require('../dao/RendezVousDao');
+const RendezVous = require('../pojo/RendezVous');
 
 class RendezVousGestion {
     constructor() {

@@ -1,5 +1,5 @@
-const RendezVous = require('./RendezVous');
-const { pool } = require('./db');
+const RendezVous = require('../pojo/Rendezvous');
+const { pool } = require('../base_de_donnes/db');
 
 class RendezVousDao {
     async create(rendezVous) {

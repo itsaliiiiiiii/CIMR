@@ -1,13 +1,12 @@
 const express = require('express');
 const router = express.Router();
 const jwt = require('jsonwebtoken');
-const { AffilieDaotype } = require('./dao/AffilieDao');
-const { RendezVousGestion } = require('./gestion/RendezVousGestion');
-const { Affilie } = require('./pojo/Affilie');
 const { RendezVous } = require('./pojo/Rendezvous');
 
-const affilieDao = new AffilieDaotype();
-const rendezVousGestion = new RendezVousGestion();
+
+
+const affilieGestion = require('./gestion/AffilieGestion');
+const rendezVousGestion = require('./gestion/RendezVousGestion');
 
 const verifyToken = (req, res, next) => {
     const token = req.headers['authorization'];
@@ -15,35 +14,46 @@ const verifyToken = (req, res, next) => {
 
     jwt.verify(token, process.env.JWT_SECRET, (err, decoded) => {
         if (err) return res.status(401).json({ message: 'Token non valide' });
-        req.userId = decoded.matricule;
+        req.userId = decoded.id;
         next();
     });
 };
 
+// Route d'authentification
 router.post('/auth', async (req, res) => {
+    console.log('Tentative d\'authentification reçue:', req.body);
     try {
         const { numeroMatricule, telephone, numeroIdentite } = req.body;
 
-        await affilieGestion.verifierIdentite(numeroMatricule, telephone, numeroIdentite);
+        console.log('Vérification de l\'identité pour:', numeroMatricule);
+        const affilie = await affilieGestion.obtenirAffilie(numeroMatricule);
 
+        if (!affilie || affilie.numeroTelephone !== telephone || affilie.numeroIdentite !== numeroIdentite) {
+            throw new Error('Informations d\'identification non valides');
+        }
+
+        const isMatriculeValid = await bcrypt.compare(numeroMatricule, affilie.numeroMatricule);
+        if (!isMatriculeValid) {
+            throw new Error('Informations d\'identification non valides');
+        }
+
+        console.log('Identité vérifiée, création du token');
         const token = jwt.sign({ id: numeroMatricule }, process.env.JWT_SECRET, {
             expiresIn: '1h'
         });
 
+        console.log('Token créé avec succès');
         res.json({ token });
     } catch (error) {
-        if (error.message === 'Affilié non trouvé' || error.message === 'Informations d\'identification non valides') {
-            res.status(401).json({ message: error.message });
-        } else {
-            res.status(500).json({ message: 'Erreur lors de l\'authentification', error: error.message });
-        }
+        console.error('Erreur lors de l\'authentification:', error);
+        res.status(401).json({ message: 'Informations d\'identification non valides' });
     }
 });
 
-// Routes pour les affiliés
+// Route pour obtenir les informations de l'affilié
 router.get('/affilie', verifyToken, async (req, res) => {
     try {
-        const affilie = await affilieDao.findByNumeroMatricule(req.userId);
+        const affilie = await affilieGestion.obtenirAffilie(req.userId);
         if (affilie) {
             res.json(affilie);
         } else {
@@ -54,7 +64,31 @@ router.get('/affilie', verifyToken, async (req, res) => {
     }
 });
 
-// Routes pour les rendez-vous
+router.post('/affilie', async (req, res) => {
+    try {
+        const { nom, prenom, email, telephone, pays, ville, numeroIdentite } = req.body;
+
+        const newAffilie = await affilieGestion.creerAffilie(
+            nom,
+            prenom,
+            email,
+            telephone,
+            pays,
+            ville,
+            numeroIdentite
+        );
+
+        res.status(201).json({ message: 'Affilié créé avec succès', affilie: newAffilie });
+    } catch (error) {
+        if (error.message.includes('déjà utilisé')) {
+            res.status(400).json({ message: error.message });
+        } else {
+            res.status(500).json({ message: 'Erreur lors de la création de l\'affilié', error: error.message });
+        }
+    }
+});
+
+// Route pour créer un rendez-vous
 router.post('/rendez-vous', verifyToken, async (req, res) => {
     try {
         const newRendezVous = new RendezVous(
@@ -76,6 +110,7 @@ router.post('/rendez-vous', verifyToken, async (req, res) => {
     }
 });
 
+// Route pour obtenir les rendez-vous de l'affilié
 router.get('/rendez-vous', verifyToken, async (req, res) => {
     try {
         const rendezVous = await rendezVousGestion.obtenirRendezVousPourAffilie(req.userId);
@@ -85,6 +120,7 @@ router.get('/rendez-vous', verifyToken, async (req, res) => {
     }
 });
 
+// Route pour mettre à jour un rendez-vous
 router.put('/rendez-vous/:id', verifyToken, async (req, res) => {
     try {
         const rendezVous = await rendezVousGestion.obtenirRendezVous(req.params.id);
@@ -115,6 +151,7 @@ router.put('/rendez-vous/:id', verifyToken, async (req, res) => {
     }
 });
 
+// Route pour supprimer un rendez-vous
 router.delete('/rendez-vous/:id', verifyToken, async (req, res) => {
     try {
         const rendezVous = await rendezVousGestion.obtenirRendezVous(req.params.id);

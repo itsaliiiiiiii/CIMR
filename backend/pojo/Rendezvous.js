@@ -8,3 +8,4 @@ class RendezVous {
         this.typeService = typeService;
     }
 }
+module.exports = RendezVous;
