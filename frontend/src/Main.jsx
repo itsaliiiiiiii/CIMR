@@ -11,34 +11,32 @@ import AuthRoute from './components/AuthRoute';
 import AfficherRendezVousPage from './components/RendezVous/AfficherRendezVousPage';
 import CreationRendezVousPage from './components/RendezVous/AjouterRendezVousPage';
 import ModificationRendezVousPage from './components/RendezVous/ModifierRendezVousPage';
-
+import Register from './components/Register/Register';
 import NavBar from './components/NavBar';
 
-
-
 function Main() {
-
   return (
     <Router>
       <NavBar />
       <Routes>
         <Route path="/login" element={<LoginForm />} />
+        <Route path="/register/*" element={<Register />} />
         <Route
-          path="/rendezvous/*" element={
+          path="/rendezvous" element={
             <AuthRoute>
               <AfficherRendezVousPage />
             </AuthRoute>
           }
         />
         <Route
-          path="/rendezvous/reservation" element={
+          path="/reservation" element={
             <AuthRoute>
               <CreationRendezVousPage />
             </AuthRoute>
           }
         />
         <Route
-          path="/rendezvous/modification" element={
+          path="/modification" element={
             <AuthRoute>
               <ModificationRendezVousPage />
             </AuthRoute>

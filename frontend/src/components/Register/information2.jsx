@@ -1,78 +1,58 @@
 import React, { useState } from 'react';
-import { useNavigate } from 'react-router-dom';
 
-const API_BASE_URL = 'http://localhost:4000/cimr';
+// Types d'identité (ajustez selon vos besoins)
+const typesIdentite = [
+    "Carte Nationale d'Identité",
+    "Passeport",
+    "Permis de conduire"
+];
 
-export default function Login() {
+export default function Information2() {
     const [formData, setFormData] = useState({
-        numeroMatricule: '',
+        email: '',
         telephone: '',
+        typeIdentite: '',
         numeroIdentite: ''
     });
     const [error, setError] = useState('');
-    const [debugInfo, setDebugInfo] = useState('');
-    const navigate = useNavigate();
 
     const handleChange = (e) => {
-        setFormData({ ...formData, [e.target.name]: e.target.value });
+        const { name, value } = e.target;
+        setFormData(prevState => ({
+            ...prevState,
+            [name]: value
+        }));
     };
 
-    const handleSubmit = async (e) => {
+    const handleSubmit = (e) => {
         e.preventDefault();
-        setError('');
-        setDebugInfo('');
-
-        try {
-            const response = await fetch(`${API_BASE_URL}/auth`, {
-                method: 'POST',
-                headers: {
-                    'Content-Type': 'application/json',
-                },
-                body: JSON.stringify(formData),
-            });
-
-            const contentType = response.headers.get("content-type");
-            if (contentType && contentType.indexOf("application/json") !== -1) {
-                const data = await response.json();
-                if (!response.ok) {
-                    throw new Error(data.message  || 'Une erreur est survenue lors de la connexion');
-                }
-                localStorage.setItem('token', data.token);
-                navigate('/rendezvous');
-            } else {
-                const text = await response.text();
-                setDebugInfo(`Réponse non-JSON reçue: ${text.substring(0, 100)}...`);
-                throw new Error('Réponse inattendue du serveur');
-            }
-        } catch (e) {
-            setError(e.message);
-            console.error('Erreur de connexion:', e);
-        }
+        // Logique pour traiter les données du formulaire
+        console.log(formData);
+        // Réinitialiser le formulaire ou naviguer vers la page suivante
     };
 
     return (
-        <div id="loginForm">
+        <div id="page_information2">
             <section className="position-relative py-4 py-xl-5">
                 <div className="container">
                     <div className="row mb-5">
                         <div className="col-md-8 col-xl-6 text-center mx-auto">
-                            <p className="w-lg-50">Veuillez saisir les informations ci-dessous</p>
+                            <p className="w-lg-50">Veuillez saisir les informations complémentaires ci-dessous</p>
                         </div>
                     </div>
                     <div className="row d-flex justify-content-center">
                         <div className="col-md-6 col-xl-4">
                             <div className="card mb-5">
-                                <div className="card-body d-flex flex-column align-items-center form">
-                                    <form className="text-center" onSubmit={handleSubmit}>
+                                <div className="card-body d-flex flex-column align-items-center">
+                                    <form className="text-center w-100" onSubmit={handleSubmit}>
                                         {error && <div className="alert alert-danger">{error}</div>}
-                                        {debugInfo && <div className="alert alert-info">{debugInfo}</div>}
                                         <div className="mb-3">
                                             <input
                                                 className="form-control"
-                                                type="text"
-                                                name="numeroMatricule"
-                                                placeholder="Matricule"
-                                                value={formData.numeroMatricule}
+                                                type="email"
+                                                name="email"
+                                                placeholder="Email"
+                                                value={formData.email}
                                                 onChange={handleChange}
                                                 required
                                             />
@@ -89,6 +69,22 @@ export default function Login() {
                                             />
                                         </div>
                                         <div className="mb-3">
+                                            <select
+                                                className="form-control"
+                                                name="typeIdentite"
+                                                value={formData.typeIdentite}
+                                                onChange={handleChange}
+                                                required
+                                            >
+                                                <option value="">Sélectionnez le type d'identité</option>
+                                                {typesIdentite.map((type, index) => (
+                                                    <option key={index} value={type}>
+                                                        {type}
+                                                    </option>
+                                                ))}
+                                            </select>
+                                        </div>
+                                        <div className="mb-3">
                                             <input
                                                 className="form-control"
                                                 type="text"
@@ -101,7 +97,7 @@ export default function Login() {
                                         </div>
                                         <div className="mb-3">
                                             <button className="btn btn-primary d-block w-100" type="submit">
-                                                Se connecter
+                                                Suivant
                                             </button>
                                         </div>
                                     </form>

@@ -17,13 +17,13 @@ async function obtenirAffilie(numeroMatricule) {
 
 async function verifierIdentite(numeroMatricule, telephone, numeroIdentite) {
     try {
-        const affilie = await obtenirAffilie(numeroMatricule);
+        const affilie = await findByNumeroMatricule(numeroMatricule);
 
-        if (affilie.numeroTelephone !== telephone || affilie.numeroIdentite !== numeroIdentite) {
+        if (!affilie || affilie.numeroTelephone !== telephone || affilie.numeroIdentite !== numeroIdentite) {
             throw new Error('Informations d\'identification non valides');
         }
 
-        return true;
+        return affilie;
     } catch (error) {
         console.error('Erreur lors de la vérification de l\'identité:', error);
         throw error;
