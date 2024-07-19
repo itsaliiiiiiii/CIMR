@@ -1,4 +1,5 @@
 import React, { useState } from 'react';
+import { useNavigate } from 'react-router-dom';
 
 const pays = [
     "France", "Belgique", "Suisse", "Canada", "États-Unis", "Allemagne", "Espagne", "Italie",
@@ -7,6 +8,7 @@ const pays = [
 ];
 
 export default function Information1() {
+    const navigate = useNavigate();
     const [formData, setFormData] = useState({
         nom: '',
         prenom: '',
@@ -26,7 +28,8 @@ export default function Information1() {
 
     const handleSubmit = (e) => {
         e.preventDefault();
-        console.log(formData);
+        localStorage.setItem('affilieData1', JSON.stringify(formData));
+        navigate('/register/information2');
     };
 
     return (
@@ -44,7 +47,7 @@ export default function Information1() {
                                 <div className="card-body d-flex flex-column align-items-center">
                                     <form className="text-center w-100" onSubmit={handleSubmit}>
                                         {error && <div className="alert alert-danger">{error}</div>}
-                                        
+
                                         <div className="mb-3">
                                             <input
                                                 className="form-control"

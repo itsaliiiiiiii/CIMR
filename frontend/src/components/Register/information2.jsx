@@ -1,6 +1,6 @@
 import React, { useState } from 'react';
+import { useNavigate } from 'react-router-dom';
 
-// Types d'identité (ajustez selon vos besoins)
 const typesIdentite = [
     "Carte Nationale d'Identité",
     "Passeport",
@@ -8,6 +8,7 @@ const typesIdentite = [
 ];
 
 export default function Information2() {
+    const navigate = useNavigate();
     const [formData, setFormData] = useState({
         email: '',
         telephone: '',
@@ -26,9 +27,8 @@ export default function Information2() {
 
     const handleSubmit = (e) => {
         e.preventDefault();
-        // Logique pour traiter les données du formulaire
-        console.log(formData);
-        // Réinitialiser le formulaire ou naviguer vers la page suivante
+        localStorage.setItem('affilieData2', JSON.stringify(formData));
+        navigate('/register/information3');
     };
 
     return (

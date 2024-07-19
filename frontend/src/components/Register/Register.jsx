@@ -1,5 +1,6 @@
 import React from 'react';
 import { Routes, Route } from 'react-router-dom';
+
 import Information1 from './information1';
 import Information2 from './information2';
 import Information3 from './information3';

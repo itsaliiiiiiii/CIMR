@@ -1,6 +1,7 @@
 import React, { useState } from 'react';
+import { useNavigate } from 'react-router-dom';
+import axios from 'axios'; 
 
-// Liste des agences (à remplacer par vos vraies agences)
 const agences = [
     "Agence Paris Centre",
     "Agence Lyon",
@@ -10,12 +11,16 @@ const agences = [
     "Agence Strasbourg"
 ];
 
+const API_BASE_URL = 'http://localhost:5000/cimr';
+
 export default function Information3() {
+    const navigate = useNavigate();
     const [formData, setFormData] = useState({
         dateRendezVous: '',
         agence: ''
     });
     const [error, setError] = useState('');
+    const [isLoading, setIsLoading] = useState(false);
 
     const handleChange = (e) => {
         const { name, value } = e.target;
@@ -25,14 +30,52 @@ export default function Information3() {
         }));
     };
 
-    const handleSubmit = (e) => {
+    const handleSubmit = async (e) => {
         e.preventDefault();
-        // Logique pour traiter les données du formulaire
-        console.log(formData);
-        // Ici, vous pourriez envoyer les données à votre backend ou passer à l'étape suivante
+        setIsLoading(true);
+        setError('');
+
+        try {
+            const affilieData1 = JSON.parse(localStorage.getItem('affilieData1') || '{}');
+            const affilieData2 = JSON.parse(localStorage.getItem('affilieData2') || '{}');
+
+            // Générer le matricule
+            const matriculeResponse = await axios.get(`${API_BASE_URL}/generateMatricule`);
+            const matricule = matriculeResponse.data.matricule;
+
+            if (!matricule) {
+                throw new Error("Impossible de générer un numéro de matricule");
+            }
+
+            const affilieData = {
+                ...affilieData1,
+                ...affilieData2,
+                numeroMatricule: matricule,
+                statutDocuments: 'en_attente'
+            };
+
+            // Créer l'affilié
+            await axios.post(`${API_BASE_URL}/affilie`, affilieData);
+
+            const rendezVousData = {
+                numeroMatricule: matricule,
+                ...formData,
+                typeService: "poser les documents d'inscription"
+            };
+
+            // Créer le rendez-vous
+            await axios.post(`${API_BASE_URL}/rendez-vous`, rendezVousData);
+
+            localStorage.setItem('affilieData3', JSON.stringify({ ...formData, numeroMatricule: matricule }));
+            navigate('/information');
+        } catch (error) {
+            console.error('Erreur lors de la création de l\'affilié ou du rendez-vous:', error);
+            setError(error.response?.data?.message || 'Une erreur est survenue lors de la création de l\'affilié ou du rendez-vous');
+        } finally {
+            setIsLoading(false);
+        }
     };
 
-    // Fonction pour obtenir le jour de la semaine
     const getDayOfWeek = (dateString) => {
         const days = ['Dimanche', 'Lundi', 'Mardi', 'Mercredi', 'Jeudi', 'Vendredi', 'Samedi'];
         const date = new Date(dateString);
@@ -91,8 +134,8 @@ export default function Information3() {
                                             </select>
                                         </div>
                                         <div className="mb-3">
-                                            <button className="btn btn-primary d-block w-100" type="submit">
-                                                Confirmer le rendez-vous
+                                            <button className="btn btn-primary d-block w-100" type="submit" disabled={isLoading}>
+                                                {isLoading ? 'Chargement...' : 'Confirmer le rendez-vous'}
                                             </button>
                                         </div>
                                     </form>

@@ -3,8 +3,6 @@ const router = express.Router();
 const jwt = require('jsonwebtoken');
 const { RendezVous } = require('./pojo/Rendezvous');
 
-
-
 const affilieGestion = require('./gestion/AffilieGestion');
 const rendezVousGestion = require('./gestion/RendezVousGestion');
 
@@ -66,16 +64,14 @@ router.get('/affilie', verifyToken, async (req, res) => {
 
 router.post('/affilie', async (req, res) => {
     try {
-        const { nom, prenom, email, telephone, pays, ville, numeroIdentite } = req.body;
+        const {
+            nom, prenom, numeroMatricule, email, telephone, pays, ville,
+            identite, typeIdentite, dateNaissance, condition
+        } = req.body;
 
         const newAffilie = await affilieGestion.creerAffilie(
-            nom,
-            prenom,
-            email,
-            telephone,
-            pays,
-            ville,
-            numeroIdentite
+            nom, prenom, numeroMatricule, email, telephone, pays, ville,
+            identite, typeIdentite, dateNaissance, condition
         );
 
         res.status(201).json({ message: 'Affilié créé avec succès', affilie: newAffilie });
@@ -109,6 +105,7 @@ router.post('/rendez-vous', verifyToken, async (req, res) => {
         }
     }
 });
+
 
 // Route pour obtenir les rendez-vous de l'affilié
 router.get('/rendez-vous', verifyToken, async (req, res) => {
