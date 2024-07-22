@@ -3,7 +3,7 @@ const { connection } = require('./db');
 async function createAffilieTable() {
     const createTableQuery = `
     CREATE TABLE IF NOT EXISTS affilie (
-    numero_matricule VARCHAR(50) PRIMARY KEY,
+    numero_matricule VARCHAR(100) PRIMARY KEY,
     nom VARCHAR(100) NOT NULL,
     prenom VARCHAR(100) NOT NULL,
     email VARCHAR(100) NOT NULL,

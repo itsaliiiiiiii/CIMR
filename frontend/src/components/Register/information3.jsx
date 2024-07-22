@@ -1,6 +1,6 @@
 import React, { useState } from 'react';
 import { useNavigate } from 'react-router-dom';
-import axios from 'axios'; 
+import axios from 'axios';
 
 const agences = [
     "Agence Belvédère Casablanca",
@@ -20,7 +20,7 @@ const API_BASE_URL = 'http://localhost:4000/cimr';
 export default function Information3() {
     const navigate = useNavigate();
     const [formData, setFormData] = useState({
-        dateRendezVous: '',
+        date_rdv: '',
         agence: ''
     });
     const [error, setError] = useState('');
@@ -42,32 +42,44 @@ export default function Information3() {
         try {
             const affilieData1 = JSON.parse(localStorage.getItem('affilieData1') || '{}');
             const affilieData2 = JSON.parse(localStorage.getItem('affilieData2') || '{}');
-
             const affilieData = {
                 ...affilieData1,
                 ...affilieData2,
+                ...formData,
                 statutDocuments: 'en_attente'
             };
 
             // Créer l'affilié et récupérer le numéro de matricule généré
             const affilieResponse = await axios.post(`${API_BASE_URL}/register`, affilieData);
-            const matricule = affilieResponse.data.numeroMatricule;
+            const matricule = affilieResponse.data.affilie.nouvelAffilie.numero_matricule;
 
             if (!matricule) {
                 throw new Error("Impossible de récupérer le numéro de matricule");
             }
 
             const rendezVousData = {
-                numeroMatricule: matricule,
-                ...formData,
-                typeService: "poser les documents d'inscription"
+                numero_matricule: matricule,
+                numero_identite: affilieData.numero_identite,
+                agence: formData.agence,
+                date_rdv: formData.date_rdv,
+                heure_rdv: null,
+                type_service: "poser les documents d'inscription"
             };
 
-            // Créer le rendez-vous
-            await axios.post(`${API_BASE_URL}/rendez-vous`, rendezVousData);
+            localStorage.setItem('token', affilieResponse.data.token);
+            const token = affilieResponse.data.token;
 
-            localStorage.setItem('affilieData3', JSON.stringify({ ...formData, numeroMatricule: matricule }));
-            navigate('/information');
+            // Créer le rendez-vous
+            const response = await axios.post(`${API_BASE_URL}/rendez-vous`, rendezVousData, {
+                headers: {
+                    'Authorization': `Bearer ${token}`
+                }
+            });
+
+            console.log('Réponse du serveur:', response.data);
+
+            localStorage.setItem('affilieData3', JSON.stringify({ ...formData, numero_matricule: matricule }));
+            navigate('/register/information');
         } catch (error) {
             console.error('Erreur lors de la création de l\'affilié ou du rendez-vous:', error);
             setError(error.response?.data?.message || 'Une erreur est survenue lors de la création de l\'affilié ou du rendez-vous');
@@ -99,20 +111,20 @@ export default function Information3() {
                                     <form className="text-center w-100" onSubmit={handleSubmit}>
                                         {error && <div className="alert alert-danger">{error}</div>}
                                         <div className="mb-3">
-                                            <label htmlFor="dateRendezVous" className="form-label">Date du rendez-vous</label>
+                                            <label htmlFor="date_rdv" className="form-label">Date du rendez-vous</label>
                                             <input
                                                 className="form-control"
                                                 type="date"
-                                                id="dateRendezVous"
-                                                name="dateRendezVous"
-                                                value={formData.dateRendezVous}
+                                                id="date_rdv"
+                                                name="date_rdv"
+                                                value={formData.date_rdv}
                                                 onChange={handleChange}
                                                 required
                                             />
                                         </div>
-                                        {formData.dateRendezVous && (
+                                        {formData.date_rdv && (
                                             <div className="mb-3">
-                                                <p>Jour : {getDayOfWeek(formData.dateRendezVous)}</p>
+                                                <p>Jour : {getDayOfWeek(formData.date_rdv)}</p>
                                             </div>
                                         )}
                                         <div className="mb-3">

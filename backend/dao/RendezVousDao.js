@@ -1,83 +1,88 @@
-const RendezVous = require('../pojo/Rendezvous');
+const RendezVous = require('../pojo/RendezVous');
 const { connection } = require('../base_de_donnes/db');
 
 class RendezVousDao {
     async create(rendezVous) {
         const query = 'INSERT INTO rendez_vous (numero_matricule, agence, date_rdv, heure_rdv, type_service) VALUES (?, ?, ?, ?, ?)';
-        const values = [rendezVous.numeroMatricule, rendezVous.agence, rendezVous.dateRdv, rendezVous.heureRdv, rendezVous.typeService];
-
         try {
-            const [result] = await connection.query(query, values);
-            console.log('Rendez-vous créé avec succès');
-            return result.insertId;
+
+            const [result] = await connection.query(query, [
+                rendezVous.numero_matricule,
+                rendezVous.agence,
+                rendezVous.date_rdv,
+                rendezVous.heure_rdv,
+                rendezVous.type_service
+            ]);
+
+            console.log('Query result:', result);
+
+            if (result.affectedRows === 1) {
+                return result.insertId;
+            } else {
+                throw new Error('Insertion failed');
+            }
         } catch (error) {
-            console.error('Erreur lors de la création du rendez-vous:', error);
+            console.error('Error in rendezVousDao.create:', error);
+            console.error('Error stack:', error.stack);
             throw error;
         }
     }
 
-    async findByNumeroRdv(numeroRdv) {
+    async findById(id) {
         const query = 'SELECT * FROM rendez_vous WHERE numero_rdv = ?';
         try {
-            const [rows] = await connection.query(query, [numeroRdv]);
-            if (rows.length > 0) {
-                const rdvData = rows[0];
-                return new RendezVous(
-                    rdvData.numero_rdv,
-                    rdvData.numero_matricule,
-                    rdvData.agence,
-                    rdvData.date_rdv,
-                    rdvData.heure_rdv,
-                    rdvData.type_service
-                );
-            }
-            return null;
+            const [rows] = await connection.query(query, [id]);
+            return rows.length > 0 ? this._createRendezVousFromRow(rows[0]) : null;
         } catch (error) {
             console.error('Erreur lors de la recherche du rendez-vous:', error);
-            throw error;
+            throw new Error('Erreur lors de la recherche du rendez-vous');
         }
     }
 
-    async findAllByNumeroMatricule(numeroMatricule) {
+    async findAllByNumeroMatricule(numero_matricule) {
         const query = 'SELECT * FROM rendez_vous WHERE numero_matricule = ? ORDER BY date_rdv DESC, heure_rdv DESC';
         try {
-            const [rows] = await connection.query(query, [numeroMatricule]);
-            return rows.map(rdvData => new RendezVous(
-                rdvData.numero_rdv,
-                rdvData.numero_matricule,
-                rdvData.agence,
-                rdvData.date_rdv,
-                rdvData.heure_rdv,
-                rdvData.type_service
-            ));
+            const [rows] = await connection.query(query, [numero_matricule]);
+            return rows.map(row => this._createRendezVousFromRow(row));
         } catch (error) {
             console.error('Erreur lors de la recherche des rendez-vous:', error);
-            throw error;
+            throw new Error('Erreur lors de la recherche des rendez-vous');
         }
     }
 
     async update(rendezVous) {
         const query = 'UPDATE rendez_vous SET agence = ?, date_rdv = ?, heure_rdv = ?, type_service = ? WHERE numero_rdv = ?';
-        const values = [rendezVous.agence, rendezVous.dateRdv, rendezVous.heureRdv, rendezVous.typeService, rendezVous.numeroRdv];
+        const values = [rendezVous.agence, rendezVous.date_rdv, rendezVous.heure_rdv, rendezVous.type_service, rendezVous.id];
 
         try {
             const [result] = await connection.query(query, values);
             return result.affectedRows > 0;
         } catch (error) {
             console.error('Erreur lors de la mise à jour du rendez-vous:', error);
-            throw error;
+            throw new Error('Erreur lors de la mise à jour du rendez-vous');
         }
     }
 
-    async delete(numeroRdv) {
+    async delete(id) {
         const query = 'DELETE FROM rendez_vous WHERE numero_rdv = ?';
         try {
-            const [result] = await connection.query(query, [numeroRdv]);
+            const [result] = await connection.query(query, [id]);
             return result.affectedRows > 0;
         } catch (error) {
             console.error('Erreur lors de la suppression du rendez-vous:', error);
-            throw error;
+            throw new Error('Erreur lors de la suppression du rendez-vous');
         }
+    }
+
+    _createRendezVousFromRow(row) {
+        return new RendezVous(
+            row.numero_rdv,
+            row.numero_matricule,
+            row.agence,
+            row.date_rdv,
+            row.heure_rdv,
+            row.type_service
+        );
     }
 }
 

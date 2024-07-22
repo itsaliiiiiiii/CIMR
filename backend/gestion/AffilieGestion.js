@@ -29,22 +29,31 @@ async function verifierIdentite(numeroMatricule, telephone, numeroIdentite) {
     }
 }
 
-async function creerAffilie(nom, prenom, email, dateNaissance, numero_telephone,
-    pays, ville, type_identite, numero_identite, numeroMatricule) {
+async function verifierAffilieExiste(numeroMatricule) {
+    try {
+        const affilie = await findByNumeroMatricule(numeroMatricule);
+        return !!affilie;
+    } catch (error) {
+        console.error('Error in verifierAffilieExiste:', error);
+        throw error;
+    }
+}
+
+async function creerAffilie(nom, prenom, email, date_naissance, numero_telephone,
+    pays, ville, type_identite, numero_identite, numero_matricule) {
     try {
         const existingAffilie = await findByNumeroIdentite(numero_identite);
         if (existingAffilie) {
             throw new Error('Un affilié avec ce numéro d\'identité existe déjà');
         }
 
-        const hashedMatricule = await bcrypt.hash(numeroMatricule, 10);
+        const hashed_matricule = await bcrypt.hash(numero_matricule, 10);
 
-        const nouvelAffilie = await creerAffilieDansBD(nom, prenom, email, dateNaissance, numero_telephone,
-            pays, ville, type_identite, numero_identite, hashedMatricule);
-
-        return { ...nouvelAffilie, numeroMatricule };
+        const nouvelAffilie = await creerAffilieDansBD(nom, prenom, email, date_naissance, numero_telephone,
+            pays, ville, type_identite, numero_identite, hashed_matricule);
+        return { nouvelAffilie };
     } catch (error) {
-        console.error('Erreur lors de la création de l\'affilié:', error);
+        console.error('Erreur 3 de la création:', error);
         throw error;
     }
 }
@@ -69,4 +78,4 @@ async function authentifierAffilie(numeroMatricule, telephone, numeroIdentite) {
     }
 }
 
-module.exports = { obtenirAffilie, verifierIdentite, creerAffilie, authentifierAffilie };
+module.exports = { obtenirAffilie, verifierIdentite, creerAffilie, authentifierAffilie, verifierAffilieExiste };

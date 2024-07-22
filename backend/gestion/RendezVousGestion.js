@@ -3,71 +3,112 @@ const RendezVous = require('../pojo/RendezVous');
 
 class RendezVousGestion {
     async creerRendezVous(rendezVous) {
-        const dateRdv = new Date(rendezVous.dateRdv);
-        const now = new Date();
+        console.log('Entering creerRendezVous with:', rendezVous);
+        try {
+            if (!rendezVous.date_rdv || !rendezVous.heure_rdv) {
+                throw new Error('La date et l\'heure du rendez-vous sont requises');
+            }
 
-        if (dateRdv <= now) {
-            throw new Error('La date du rendez-vous doit être dans le futur');
+            const dateRdv = new Date(`${rendezVous.date_rdv}T${rendezVous.heure_rdv}`);
+            const now = new Date();
+
+            if (isNaN(dateRdv.getTime())) {
+                throw new Error('Date ou heure du rendez-vous invalide');
+            }
+
+            if (dateRdv <= now) {
+                throw new Error('La date et l\'heure du rendez-vous doivent être dans le futur');
+            }
+
+            console.log('Attempting to create rendez-vous in database');
+            const result = await rendezVousDao.create(rendezVous);
+            console.log('Rendez-vous created successfully:', result);
+            return result;
+        } catch (error) {
+            console.error('Error in creerRendezVous:', error);
+            console.error('Error stack:', error.stack);
+            throw error;
         }
-
-        // Vérifier si l'affilié a déjà un rendez-vous pour déposer les documents
-        const rendezVousExistants = await this.obtenirRendezVousPourAffilie(rendezVous.numeroMatricule);
-        const rendezVousDepotDocuments = rendezVousExistants.find(rdv => rdv.typeService === "poser les documents d'inscription");
-
-        if (rendezVousDepotDocuments) {
-            throw new Error('Vous avez déjà un rendez-vous prévu pour déposer vos documents d\'inscription');
-        }
-
-        // Si c'est un rendez-vous pour déposer les documents, fixer l'heure à 8:00
-        if (rendezVous.typeService === "poser les documents d'inscription") {
-            rendezVous.heureRdv = "08:00:00";
-        }
-
-        return await rendezVousDao.create(rendezVous);
     }
 
-    async obtenirRendezVous(numeroRdv) {
-        return await rendezVousDao.findByNumeroRdv(numeroRdv);
+    async obtenirRendezVous(id) {
+        console.log('Début de obtenirRendezVous avec ID:', id);
+        try {
+            const rendezVous = await rendezVousDao.findById(id);
+            console.log('Rendez-vous obtenu:', rendezVous);
+            return rendezVous;
+        } catch (error) {
+            console.error('Erreur dans obtenirRendezVous:', error);
+            throw error;
+        }
     }
 
-    async obtenirRendezVousPourAffilie(numeroMatricule) {
-        return await rendezVousDao.findAllByNumeroMatricule(numeroMatricule);
+    async obtenirRendezVousPourAffilie(numero_matricule) {
+        console.log('Début de obtenirRendezVousPourAffilie avec numéro de matricule:', numero_matricule);
+        try {
+            const rendezVous = await rendezVousDao.findAllByNumeroMatricule(numero_matricule);
+            console.log('Rendez-vous obtenus pour l\'affilié:', rendezVous);
+            return rendezVous;
+        } catch (error) {
+            console.error('Erreur dans obtenirRendezVousPourAffilie:', error);
+            throw error;
+        }
     }
 
     async mettreAJourRendezVous(rendezVous) {
-        const existingRdv = await rendezVousDao.findByNumeroRdv(rendezVous.numeroRdv);
-        if (!existingRdv) {
-            throw new Error('Rendez-vous non trouvé');
-        }
+        console.log('Début de mettreAJourRendezVous avec:', rendezVous);
+        try {
+            const existingRdv = await rendezVousDao.findById(rendezVous.id);
+            if (!existingRdv) {
+                console.log('Erreur: Rendez-vous non trouvé');
+                throw new Error('Rendez-vous non trouvé');
+            }
 
-        if (new Date(existingRdv.dateRdv) < new Date()) {
-            throw new Error('Impossible de modifier un rendez-vous passé');
-        }
+            if (new Date(existingRdv.date_rdv) < new Date()) {
+                console.log('Erreur: Tentative de modification d\'un rendez-vous passé');
+                throw new Error('Impossible de modifier un rendez-vous passé');
+            }
 
-        // Vérifier si la nouvelle date est dans le futur
-        if (new Date(rendezVous.dateRdv) <= new Date()) {
-            throw new Error('La nouvelle date du rendez-vous doit être dans le futur');
-        }
+            if (new Date(rendezVous.date_rdv) <= new Date()) {
+                console.log('Erreur: La nouvelle date du rendez-vous est dans le passé');
+                throw new Error('La nouvelle date du rendez-vous doit être dans le futur');
+            }
 
-        // Si c'est un rendez-vous pour déposer les documents, s'assurer que l'heure reste 8:00
-        if (rendezVous.typeService === "poser les documents d'inscription") {
-            rendezVous.heureRdv = "08:00:00";
-        }
+            if (rendezVous.type_service === "poser les documents d'inscription") {
+                rendezVous.heure_rdv = "08:00:00";
+                console.log('Heure du rendez-vous fixée à 08:00:00 pour le dépôt de documents');
+            }
 
-        return await rendezVousDao.update(rendezVous);
+            const updated = await rendezVousDao.update(rendezVous);
+            console.log('Mise à jour du rendez-vous réussie:', updated);
+            return updated;
+        } catch (error) {
+            console.error('Erreur dans mettreAJourRendezVous:', error);
+            throw error;
+        }
     }
 
-    async supprimerRendezVous(numeroRdv) {
-        const rendezVous = await rendezVousDao.findByNumeroRdv(numeroRdv);
-        if (!rendezVous) {
-            throw new Error('Rendez-vous non trouvé');
-        }
+    async supprimerRendezVous(id) {
+        console.log('Début de supprimerRendezVous avec ID:', id);
+        try {
+            const rendezVous = await rendezVousDao.findById(id);
+            if (!rendezVous) {
+                console.log('Erreur: Rendez-vous non trouvé');
+                throw new Error('Rendez-vous non trouvé');
+            }
 
-        if (new Date(rendezVous.dateRdv) < new Date()) {
-            throw new Error('Impossible de supprimer un rendez-vous passé');
-        }
+            if (new Date(rendezVous.date_rdv) < new Date()) {
+                console.log('Erreur: Tentative de suppression d\'un rendez-vous passé');
+                throw new Error('Impossible de supprimer un rendez-vous passé');
+            }
 
-        return await rendezVousDao.delete(numeroRdv);
+            const deleted = await rendezVousDao.delete(id);
+            console.log('Suppression du rendez-vous réussie:', deleted);
+            return deleted;
+        } catch (error) {
+            console.error('Erreur dans supprimerRendezVous:', error);
+            throw error;
+        }
     }
 }
 

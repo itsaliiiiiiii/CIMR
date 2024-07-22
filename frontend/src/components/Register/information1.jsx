@@ -14,7 +14,7 @@ export default function Information1() {
         prenom: '',
         pays: '',
         ville: '',
-        dateNaissance: ''
+        date_naissance: ''
     });
     const [error, setError] = useState('');
 
@@ -101,9 +101,9 @@ export default function Information1() {
                                             <input
                                                 className="form-control"
                                                 type="date"
-                                                name="dateNaissance"
+                                                name="date_naissance"
                                                 placeholder="Date de naissance"
-                                                value={formData.dateNaissance}
+                                                value={formData.date_naissance}
                                                 onChange={handleChange}
                                                 required
                                             />

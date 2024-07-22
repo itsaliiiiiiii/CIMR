@@ -10,7 +10,7 @@ class Affilie {
         this.ville = ville;
         this.type_identite = type_identite;
         this.numero_identite = numero_identite;
-        this.hashedMatricule = hashedMatricule;
+        this.numero_matricule = hashedMatricule;
     }
 }
 
