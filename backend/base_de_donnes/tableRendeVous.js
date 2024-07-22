@@ -15,7 +15,7 @@ async function createRendezVousTable() {
 
     try {
         await connection.query(createTableQuery);
-        console.log('Rendez-vous table created successfully');
+        console.log("done");
     } catch (error) {
         console.error('Erreur creation table RendezVous:', error);
     }

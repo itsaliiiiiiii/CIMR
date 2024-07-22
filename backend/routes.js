@@ -1,6 +1,8 @@
 const express = require('express');
 const router = express.Router();
 const jwt = require('jsonwebtoken');
+const bcrypt = require('bcrypt');
+
 const { RendezVous } = require('./pojo/Rendezvous');
 
 const affilieGestion = require('./gestion/AffilieGestion');
@@ -17,36 +19,67 @@ const verifyToken = (req, res, next) => {
     });
 };
 
-// Route d'authentification
-router.post('/auth', async (req, res) => {
-    console.log('Tentative d\'authentification reçue:', req.body);
+// Fonction pour générer le numéro de matricule
+const generateMatricule = (nom, prenom, dateNaissance) => {
+    const firstLetterNom = nom.charAt(0).toUpperCase();
+    const firstLetterPrenom = prenom.charAt(0).toUpperCase();
+
+    const date = new Date(dateNaissance);
+    const day = String(date.getDate()).padStart(2, '0');
+    const month = String(date.getMonth() + 1).padStart(2, '0');
+    const year = String(date.getFullYear()).slice(-2);
+
+    const datePart = day + month + year;
+
+    const generateRandomChars = () => {
+        const chars = 'ABCDEFGHIJKLMNOPQRSTUVWXYZ0123456789';
+        return Array(4).fill().map(() => chars[Math.floor(Math.random() * chars.length)]).join('');
+    };
+
+    return `${firstLetterNom}${firstLetterPrenom}${datePart}${generateRandomChars()}`;
+};
+
+// Route d'inscription d'un affilié
+router.post('/register', async (req, res) => {
     try {
-        const { numeroMatricule, telephone, numeroIdentite } = req.body;
+        const {
+            nom, prenom, email, dateNaissance, numero_telephone,
+            pays, ville, type_identite, numero_identite
+        } = req.body;
 
-        console.log('Vérification de l\'identité pour:', numeroMatricule);
-        const affilie = await affilieGestion.obtenirAffilie(numeroMatricule);
+        const numeroMatricule = generateMatricule(nom, prenom, dateNaissance);
 
-        if (!affilie || affilie.numeroTelephone !== telephone || affilie.numeroIdentite !== numeroIdentite) {
-            throw new Error('Informations d\'identification non valides');
+        const newAffilie = await affilieGestion.creerAffilie(
+            nom, prenom, email, dateNaissance, numero_telephone,
+            pays, ville, type_identite, numero_identite, numeroMatricule
+        );
+
+        res.status(201).json({ message: 'Affilié créé avec succès', affilie: newAffilie });
+    } catch (error) {
+        if (error.message.includes('existe déjà')) {
+            res.status(400).json({ message: error.message });
+        } else {
+            res.status(500).json({ message: 'Erreur lors de la création de l\'affilié', error: error.message });
         }
+    }
+});
 
-        const isMatriculeValid = await bcrypt.compare(numeroMatricule, affilie.numeroMatricule);
-        if (!isMatriculeValid) {
-            throw new Error('Informations d\'identification non valides');
-        }
+router.post('/auth', async (req, res) => {
+    try {
+        const { numeroMatricule, numero_telephone, numero_identite } = req.body;
 
-        console.log('Identité vérifiée, création du token');
+        const affilie = await affilieGestion.authentifierAffilie(numeroMatricule, numero_telephone, numero_identite);
+
         const token = jwt.sign({ id: numeroMatricule }, process.env.JWT_SECRET, {
             expiresIn: '1h'
         });
 
-        console.log('Token créé avec succès');
-        res.json({ token });
+        res.json({ token, affilie });
     } catch (error) {
-        console.error('Erreur lors de l\'authentification:', error);
         res.status(401).json({ message: 'Informations d\'identification non valides' });
     }
 });
+
 
 // Route pour obtenir les informations de l'affilié
 router.get('/affilie', verifyToken, async (req, res) => {
@@ -62,28 +95,6 @@ router.get('/affilie', verifyToken, async (req, res) => {
     }
 });
 
-router.post('/affilie', async (req, res) => {
-    try {
-        const {
-            nom, prenom, numeroMatricule, email, telephone, pays, ville,
-            identite, typeIdentite, dateNaissance, condition
-        } = req.body;
-
-        const newAffilie = await affilieGestion.creerAffilie(
-            nom, prenom, numeroMatricule, email, telephone, pays, ville,
-            identite, typeIdentite, dateNaissance, condition
-        );
-
-        res.status(201).json({ message: 'Affilié créé avec succès', affilie: newAffilie });
-    } catch (error) {
-        if (error.message.includes('déjà utilisé')) {
-            res.status(400).json({ message: error.message });
-        } else {
-            res.status(500).json({ message: 'Erreur lors de la création de l\'affilié', error: error.message });
-        }
-    }
-});
-
 // Route pour créer un rendez-vous
 router.post('/rendez-vous', verifyToken, async (req, res) => {
     try {
@@ -91,9 +102,9 @@ router.post('/rendez-vous', verifyToken, async (req, res) => {
             null,
             req.userId,
             req.body.agence,
-            req.body.heureRdv,
-            req.body.dateRdv,
-            req.body.typeService
+            req.body.heure_rdv,
+            req.body.date_rdv,
+            'poser les documents d\'inscription'
         );
         const rendezVousId = await rendezVousGestion.creerRendezVous(newRendezVous);
         res.status(201).json({ message: 'Rendez-vous créé avec succès', id: rendezVousId });
@@ -105,7 +116,6 @@ router.post('/rendez-vous', verifyToken, async (req, res) => {
         }
     }
 });
-
 
 // Route pour obtenir les rendez-vous de l'affilié
 router.get('/rendez-vous', verifyToken, async (req, res) => {
@@ -121,7 +131,7 @@ router.get('/rendez-vous', verifyToken, async (req, res) => {
 router.put('/rendez-vous/:id', verifyToken, async (req, res) => {
     try {
         const rendezVous = await rendezVousGestion.obtenirRendezVous(req.params.id);
-        if (!rendezVous || rendezVous.numeroMatricule !== req.userId) {
+        if (!rendezVous || rendezVous.numero_matricule !== req.userId) {
             return res.status(403).json({ message: 'Accès non autorisé à ce rendez-vous' });
         }
 
@@ -129,9 +139,9 @@ router.put('/rendez-vous/:id', verifyToken, async (req, res) => {
             req.params.id,
             req.userId,
             req.body.agence,
-            req.body.heureRdv,
-            req.body.dateRdv,
-            req.body.typeService
+            req.body.heure_rdv,
+            req.body.date_rdv,
+            'poser les documents d\'inscription'
         );
         const updated = await rendezVousGestion.mettreAJourRendezVous(updatedRendezVous);
         if (updated) {
@@ -152,7 +162,7 @@ router.put('/rendez-vous/:id', verifyToken, async (req, res) => {
 router.delete('/rendez-vous/:id', verifyToken, async (req, res) => {
     try {
         const rendezVous = await rendezVousGestion.obtenirRendezVous(req.params.id);
-        if (!rendezVous || rendezVous.numeroMatricule !== req.userId) {
+        if (!rendezVous || rendezVous.numero_matricule !== req.userId) {
             return res.status(403).json({ message: 'Accès non autorisé à ce rendez-vous' });
         }
 

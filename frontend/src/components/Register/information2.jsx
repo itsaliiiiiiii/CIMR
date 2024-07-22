@@ -11,9 +11,9 @@ export default function Information2() {
     const navigate = useNavigate();
     const [formData, setFormData] = useState({
         email: '',
-        telephone: '',
-        typeIdentite: '',
-        numeroIdentite: ''
+        numero_telephone: '',
+        type_identite: '',
+        numero_identite: ''
     });
     const [error, setError] = useState('');
 
@@ -61,9 +61,9 @@ export default function Information2() {
                                             <input
                                                 className="form-control"
                                                 type="tel"
-                                                name="telephone"
+                                                name="numero_telephone"
                                                 placeholder="Téléphone"
-                                                value={formData.telephone}
+                                                value={formData.numero_telephone}
                                                 onChange={handleChange}
                                                 required
                                             />
@@ -71,8 +71,8 @@ export default function Information2() {
                                         <div className="mb-3">
                                             <select
                                                 className="form-control"
-                                                name="typeIdentite"
-                                                value={formData.typeIdentite}
+                                                name="type_identite"
+                                                value={formData.type_identite}
                                                 onChange={handleChange}
                                                 required
                                             >
@@ -88,9 +88,9 @@ export default function Information2() {
                                             <input
                                                 className="form-control"
                                                 type="text"
-                                                name="numeroIdentite"
+                                                name="numero_identite"
                                                 placeholder="Numéro d'identité"
-                                                value={formData.numeroIdentite}
+                                                value={formData.numero_identite}
                                                 onChange={handleChange}
                                                 required
                                             />

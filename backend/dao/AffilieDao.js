@@ -1,11 +1,10 @@
 const Affilie = require('../pojo/Affilie');
 const { connection } = require('../base_de_donnes/db');
 
-async function findByNumeroMatricule(numeroMatricule) {
-    const query = 'SELECT * FROM affilie WHERE numero_matricule = ?';
+async function findByNumeroIdentite(NumeroIdentite) {
+    const query = 'SELECT * FROM affilie WHERE numero_identite = ?';
     try {
-        const [rows] = await connection.query(query, [numeroMatricule]);
-        console.log(rows[0]) ;
+        const [rows] = await connection.query(query, [NumeroIdentite]);
         if (rows.length > 0) {
             const affilieData = rows[0];
             return new Affilie(
@@ -13,9 +12,11 @@ async function findByNumeroMatricule(numeroMatricule) {
                 affilieData.nom,
                 affilieData.prenom,
                 affilieData.email,
+                affilieData.date_naissance,
                 affilieData.numero_telephone,
                 affilieData.pays,
                 affilieData.ville,
+                affilieData.type_identite,
                 affilieData.numero_identite
             );
         }
@@ -26,17 +27,41 @@ async function findByNumeroMatricule(numeroMatricule) {
     }
 }
 
-async function creerAffilie(numeroMatricule, nom, prenom, email, telephone, pays, ville, numeroIdentite) {
-    const query = 'INSERT INTO affilie (numero_matricule, nom, prenom, email, numero_telephone, pays, ville, numero_identite) VALUES (?, ?, ?, ?, ?, ?, ?, ?)';
+async function findByNumeroMatricule(NumeroMatricule) {
+    const query = 'SELECT * FROM affilie WHERE numero_matricule = ?';
     try {
-        const existingAffilie = await findByNumeroMatricule(numeroMatricule);
-        if (existingAffilie) {
-            throw new Error('Un affilié avec ce numéro de matricule existe déjà');
+        const [rows] = await connection.query(query, [NumeroMatricule]);
+        if (rows.length > 0) {
+            const affilieData = rows[0];
+            return new Affilie(
+                affilieData.numero_matricule,
+                affilieData.nom,
+                affilieData.prenom,
+                affilieData.email,
+                affilieData.date_naissance,
+                affilieData.numero_telephone,
+                affilieData.pays,
+                affilieData.ville,
+                affilieData.type_identite,
+                affilieData.numero_identite
+            );
         }
+        return null;
+    } catch (error) {
+        console.error('Erreur lors de la recherche de l\'affilie:', error);
+        throw error;
+    }
+}
 
-        const [result] = await connection.query(query, [numeroMatricule, nom, prenom, email, telephone, pays, ville, numeroIdentite]);
+async function creerAffilie(nom, prenom, email, dateNaissance, numero_telephone,
+    pays, ville, type_identite, numero_identite, hashedMatricule) {
+    const query = 'INSERT INTO affilie (nom, prenom, email, date_naissance, numero_telephone, pays, ville, type_identite, numero_identite, numero_matricule) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?)';
+    try {
+        const [result] = await connection.query(query, [nom, prenom, email, dateNaissance, numero_telephone,
+            pays, ville, type_identite, numero_identite, hashedMatricule]);
         if (result.affectedRows === 1) {
-            return new Affilie(numeroMatricule, nom, prenom, email, telephone, pays, ville, numeroIdentite);
+            return new Affilie(hashedMatricule, nom, prenom, email, dateNaissance, numero_telephone,
+                pays, ville, type_identite, numero_identite);
         } else {
             throw new Error('Erreur lors de la création de l\'affilié');
         }
@@ -46,4 +71,4 @@ async function creerAffilie(numeroMatricule, nom, prenom, email, telephone, pays
     }
 }
 
-module.exports = { findByNumeroMatricule, creerAffilie };
+module.exports = { findByNumeroIdentite, creerAffilie, findByNumeroMatricule };

@@ -3,15 +3,19 @@ import { useNavigate } from 'react-router-dom';
 import axios from 'axios'; 
 
 const agences = [
-    "Agence Paris Centre",
-    "Agence Lyon",
-    "Agence Marseille",
-    "Agence Bordeaux",
-    "Agence Lille",
-    "Agence Strasbourg"
+    "Agence Belvédère Casablanca",
+    "Agence Centrale Casablanca",
+    "Agence Marrakech",
+    "Agence Rabat",
+    "Agence Meknes",
+    "Agence Fes",
+    "Agence Tanger",
+    "Agence Agadir",
+    "Agence Oujda",
+    "Agence Oujda",
 ];
 
-const API_BASE_URL = 'http://localhost:5000/cimr';
+const API_BASE_URL = 'http://localhost:4000/cimr';
 
 export default function Information3() {
     const navigate = useNavigate();
@@ -39,23 +43,19 @@ export default function Information3() {
             const affilieData1 = JSON.parse(localStorage.getItem('affilieData1') || '{}');
             const affilieData2 = JSON.parse(localStorage.getItem('affilieData2') || '{}');
 
-            // Générer le matricule
-            const matriculeResponse = await axios.get(`${API_BASE_URL}/generateMatricule`);
-            const matricule = matriculeResponse.data.matricule;
-
-            if (!matricule) {
-                throw new Error("Impossible de générer un numéro de matricule");
-            }
-
             const affilieData = {
                 ...affilieData1,
                 ...affilieData2,
-                numeroMatricule: matricule,
                 statutDocuments: 'en_attente'
             };
 
-            // Créer l'affilié
-            await axios.post(`${API_BASE_URL}/affilie`, affilieData);
+            // Créer l'affilié et récupérer le numéro de matricule généré
+            const affilieResponse = await axios.post(`${API_BASE_URL}/register`, affilieData);
+            const matricule = affilieResponse.data.numeroMatricule;
+
+            if (!matricule) {
+                throw new Error("Impossible de récupérer le numéro de matricule");
+            }
 
             const rendezVousData = {
                 numeroMatricule: matricule,

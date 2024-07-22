@@ -1,5 +1,6 @@
 import React, { useState } from 'react';
 import { useNavigate } from 'react-router-dom';
+import Captcha from './Captcha';
 
 const API_BASE_URL = 'http://localhost:4000/cimr';
 
@@ -9,6 +10,7 @@ export default function Login() {
         telephone: '',
         numeroIdentite: ''
     });
+    const [captchaValid, setCaptchaValid] = useState(false);
     const [error, setError] = useState('');
     const [debugInfo, setDebugInfo] = useState('');
     const navigate = useNavigate();
@@ -16,11 +18,19 @@ export default function Login() {
     const handleChange = (e) => {
         setFormData({ ...formData, [e.target.name]: e.target.value });
     };
+    const handleRegister = (e) => {
+        navigate('/register/information1');
+    };
 
     const handleSubmit = async (e) => {
         e.preventDefault();
         setError('');
         setDebugInfo('');
+
+        if (!captchaValid) {
+            setError('CAPTCHA invalide. Veuillez réessayer.');
+            return;
+        }
 
         try {
             const response = await fetch(`${API_BASE_URL}/auth`, {
@@ -35,7 +45,7 @@ export default function Login() {
             if (contentType && contentType.indexOf("application/json") !== -1) {
                 const data = await response.json();
                 if (!response.ok) {
-                    throw new Error(data.message  || 'Une erreur est survenue lors de la connexion');
+                    throw new Error(data.message || 'Une erreur est survenue lors de la connexion');
                 }
                 localStorage.setItem('token', data.token);
                 navigate('/rendezvous');
@@ -52,7 +62,7 @@ export default function Login() {
 
     return (
         <div id="loginForm">
-            <section className="position-relative py-4 py-xl-5">
+            <section className="position-relative py-0 py-xl-0">
                 <div className="container">
                     <div className="row mb-5">
                         <div className="col-md-8 col-xl-6 text-center mx-auto">
@@ -64,8 +74,6 @@ export default function Login() {
                             <div className="card mb-5">
                                 <div className="card-body d-flex flex-column align-items-center form">
                                     <form className="text-center" onSubmit={handleSubmit}>
-                                        {error && <div className="alert alert-danger">{error}</div>}
-                                        {debugInfo && <div className="alert alert-info">{debugInfo}</div>}
                                         <div className="mb-3">
                                             <input
                                                 className="form-control"
@@ -99,14 +107,18 @@ export default function Login() {
                                                 required
                                             />
                                         </div>
+                                        <Captcha onValidate={setCaptchaValid} />
                                         <div className="mb-3">
                                             <button className="btn btn-primary d-block w-100" type="submit">
                                                 Se connecter
                                             </button>
                                         </div>
                                     </form>
+                                    <a onClick={handleRegister} style={{cursor:"pointer"}}>Creer une Compte ?</a>
                                 </div>
                             </div>
+                            {error && <div className="alert alert-danger">{error}</div>}
+                            {debugInfo && <div className="alert alert-info">{debugInfo}</div>}
                         </div>
                     </div>
                 </div>
