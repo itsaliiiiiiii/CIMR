@@ -12,7 +12,7 @@ const verifyToken = (req, res, next) => {
     const authHeader = req.headers['authorization'];
     if (!authHeader) return res.status(403).json({ message: 'Aucun token fourni' });
 
-    const token = authHeader.split(' ')[1]; // Cette ligne extrait le token après "Bearer"
+    const token = authHeader.split(' ')[1]; 
     if (!token) return res.status(403).json({ message: 'Format de token invalide' });
 
     jwt.verify(token, process.env.JWT_SECRET, (err, decoded) => {
@@ -22,8 +22,6 @@ const verifyToken = (req, res, next) => {
         next();
     });
 };
-
-// Fonction pour générer le numéro de matricule
 
 
 // Route d'inscription d'un affilié
@@ -61,6 +59,10 @@ router.post('/auth', async (req, res) => {
     try {
         const { numero_matricule, numero_telephone, numero_identite } = req.body;
 
+        if (!numero_matricule || !numero_telephone || !numero_identite) {
+            return res.status(400).json({ message: 'Tous les champs sont requis' });
+        }
+
         const affilie = await affilieGestion.authentifierAffilie(numero_matricule, numero_telephone, numero_identite);
 
         const token = jwt.sign({ numero_matricule: numero_matricule, numero_identite: numero_identite }, process.env.JWT_SECRET, {
@@ -69,6 +71,7 @@ router.post('/auth', async (req, res) => {
 
         res.json({ token, affilie });
     } catch (error) {
+        console.error('Erreur d\'authentification:', error);
         res.status(401).json({ message: 'Informations d\'identification non valides' });
     }
 });

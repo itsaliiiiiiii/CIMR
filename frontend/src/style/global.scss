@@ -33,9 +33,10 @@ body {
 #loginForm {
     margin-top: 50px;
     margin-bottom: 50px;
-    .form{
+
+    .form {
         margin: 50px 0 !important;
-        
+
     }
 }
 
@@ -43,6 +44,7 @@ body {
     display: flex;
     flex-direction: column !important;
     gap: 20px;
+    user-select: none;
 
     .code-captcha-form {
         display: flex;

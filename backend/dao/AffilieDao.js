@@ -2,13 +2,12 @@ const Affilie = require('../pojo/Affilie');
 const { connection } = require('../base_de_donnes/db');
 
 async function findByNumeroIdentite(NumeroIdentite) {
-    const query = 'SELECT * FROM affilie WHERE numero_identite = ?';
+    const query = 'SELECT * FROM affilie WHERE numero_identite = ? LIMIT 1';
     try {
         const [rows] = await connection.query(query, [NumeroIdentite]);
         if (rows.length > 0) {
             const affilieData = rows[0];
             return new Affilie(
-                affilieData.numero_matricule,
                 affilieData.nom,
                 affilieData.prenom,
                 affilieData.email,
@@ -17,7 +16,8 @@ async function findByNumeroIdentite(NumeroIdentite) {
                 affilieData.pays,
                 affilieData.ville,
                 affilieData.type_identite,
-                affilieData.numero_identite
+                affilieData.numero_identite,
+                affilieData.numero_matricule,
             );
         }
         return null;

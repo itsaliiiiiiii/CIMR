@@ -20,9 +20,9 @@ export default function Information2() {
         numero_identite: ''
     });
 
-    const [error, setError] = useState('');
+    const [errors, setErrors] = useState({});
     const [isLoading, setIsLoading] = useState(false);
-    const [captchaValid, setCaptchaValid] = useState(false); // Add this state
+    const [captchaValid, setCaptchaValid] = useState(false);
 
     const handleChange = (e) => {
         const { name, value } = e.target;
@@ -30,11 +30,48 @@ export default function Information2() {
             ...prevState,
             [name]: value
         }));
+        // Clear error when user starts typing
+        setErrors(prevErrors => ({ ...prevErrors, [name]: '' }));
+    };
+
+    const validateForm = () => {
+        const newErrors = {};
+
+        if (!formData.email.trim()) {
+            newErrors.email = 'L\'email est requis';
+        } else if (!/^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(formData.email)) {
+            newErrors.email = 'Format d\'email invalide';
+        }
+
+        if (!formData.numero_telephone.trim()) {
+            newErrors.numero_telephone = 'Le numéro de téléphone est requis';
+        } else if (!/^\+\d{10,}$/.test(formData.numero_telephone)) {
+            newErrors.numero_telephone = 'Le numéro de téléphone doit commencer par + et contenir au moins 10 chiffres';
+        }
+
+
+        if (!formData.type_identite) {
+            newErrors.type_identite = 'Le type d\'identité est requis';
+        }
+
+        if (!formData.numero_identite.trim()) {
+            newErrors.numero_identite = 'Le numéro d\'identité est requis';
+        } else {
+            const regex = /^([a-z]{2}\d{6}|\d{8})$/;
+            if (!regex.test(formData.numero_identite)) {
+                newErrors.numero_identite = 'Le numéro d\'identité doit être composé de 2 lettres suivies de 6 chiffres ou de 8 chiffres';
+            }
+        }
+
+        setErrors(newErrors);
+        return Object.keys(newErrors).length === 0;
     };
 
     const handleSubmit = async (e) => {
         e.preventDefault();
-        setError('');
+        if (!validateForm() || !captchaValid) {
+            return;
+        }
         setIsLoading(true);
 
         try {
@@ -56,7 +93,10 @@ export default function Information2() {
             }
         } catch (error) {
             console.error('Erreur lors de la création de l\'affilié:', error);
-            setError(error.response?.data?.message || 'Une erreur est survenue lors de la création de l\'affilié');
+            setErrors(prevErrors => ({
+                ...prevErrors,
+                submit: error.response?.data?.message || 'Une erreur est survenue lors de la création de l\'affilié'
+            }));
         } finally {
             setIsLoading(false);
         }
@@ -76,36 +116,35 @@ export default function Information2() {
                             <div className="card mb-5">
                                 <div className="card-body d-flex flex-column align-items-center">
                                     <form className="text-center w-100" onSubmit={handleSubmit}>
-                                        {error && <div className="alert alert-danger">{error}</div>}
+                                        {errors.submit && <div className="alert alert-danger">{errors.submit}</div>}
                                         <div className="mb-3">
                                             <input
-                                                className="form-control"
+                                                className={`form-control ${errors.email ? 'is-invalid' : ''}`}
                                                 type="email"
                                                 name="email"
                                                 placeholder="Email"
                                                 value={formData.email}
                                                 onChange={handleChange}
-                                                required
                                             />
+                                            {errors.email && <div className="invalid-feedback">{errors.email}</div>}
                                         </div>
                                         <div className="mb-3">
                                             <input
-                                                className="form-control"
+                                                className={`form-control ${errors.numero_telephone ? 'is-invalid' : ''}`}
                                                 type="tel"
                                                 name="numero_telephone"
-                                                placeholder="Téléphone"
+                                                placeholder="Téléphone (ex: +33123456789)"
                                                 value={formData.numero_telephone}
                                                 onChange={handleChange}
-                                                required
                                             />
+                                            {errors.numero_telephone && <div className="invalid-feedback">{errors.numero_telephone}</div>}
                                         </div>
                                         <div className="mb-3">
                                             <select
-                                                className="form-control"
+                                                className={`form-control ${errors.type_identite ? 'is-invalid' : ''}`}
                                                 name="type_identite"
                                                 value={formData.type_identite}
                                                 onChange={handleChange}
-                                                required
                                             >
                                                 <option value="">Sélectionnez le type d'identité</option>
                                                 {typesIdentite.map((type, index) => (
@@ -114,17 +153,18 @@ export default function Information2() {
                                                     </option>
                                                 ))}
                                             </select>
+                                            {errors.type_identite && <div className="invalid-feedback">{errors.type_identite}</div>}
                                         </div>
                                         <div className="mb-3">
                                             <input
-                                                className="form-control"
+                                                className={`form-control ${errors.numero_identite ? 'is-invalid' : ''}`}
                                                 type="text"
                                                 name="numero_identite"
                                                 placeholder="Numéro d'identité"
                                                 value={formData.numero_identite}
                                                 onChange={handleChange}
-                                                required
                                             />
+                                            {errors.numero_identite && <div className="invalid-feedback">{errors.numero_identite}</div>}
                                         </div>
                                         <div className="mb-3">
                                             <Captcha onValidate={setCaptchaValid} />
@@ -133,7 +173,7 @@ export default function Information2() {
                                             <button
                                                 className="btn btn-primary d-block w-100"
                                                 type="submit"
-                                                disabled={isLoading || !captchaValid} 
+                                                disabled={isLoading || !captchaValid}
                                             >
                                                 {isLoading ? 'Chargement...' : 'Soumettre'}
                                             </button>

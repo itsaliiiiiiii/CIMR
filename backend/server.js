@@ -21,7 +21,7 @@ app.use(bodyParser.json());
 app.use(bodyParser.urlencoded({ extended: true }));
 
 app.use('/cimr', routes_affilie);
-app.use('/cimr', routes_rendezvous);
+// app.use('/cimr', routes_rendezvous);
 
 
 app.listen(port, () => {

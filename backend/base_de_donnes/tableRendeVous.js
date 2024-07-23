@@ -8,8 +8,7 @@ async function createRendezVousTable() {
     agence VARCHAR(100) NOT NULL,
     heure_rdv TIME NOT NULL,
     date_rdv DATE NOT NULL,
-    type_service VARCHAR(100) NOT NULL,
-    FOREIGN KEY (numero_matricule) REFERENCES affilie(numero_matricule)
+    type_service VARCHAR(100) NOT NULL
     )
     `;
 

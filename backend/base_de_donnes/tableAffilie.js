@@ -6,14 +6,14 @@ async function createAffilieTable() {
     numero_matricule VARCHAR(100) PRIMARY KEY,
     nom VARCHAR(100) NOT NULL,
     prenom VARCHAR(100) NOT NULL,
-    email VARCHAR(100) NOT NULL,
+    email VARCHAR(100) NOT NULL UNIQUE,
     date_naissance DATE NOT NULL,
-    numero_telephone VARCHAR(20) NOT NULL,
+    numero_telephone VARCHAR(20) NOT NULL UNIQUE,
     pays VARCHAR(50) NOT NULL,
     statusDocuments VARCHAR(50) DEFAULT 'En attente',
     ville VARCHAR(50) NOT NULL,
     type_identite VARCHAR(50) NOT NULL,
-    numero_identite VARCHAR(50) NOT NULL
+    numero_identite VARCHAR(50) NOT NULL UNIQUE
     )
 `;
 

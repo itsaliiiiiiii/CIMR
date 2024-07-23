@@ -77,17 +77,21 @@ async function creerAffilie(nom, prenom, email, date_naissance, numero_telephone
     }
 }
 
-async function authentifierAffilie(numeroMatricule, telephone, numeroIdentite) {
+async function authentifierAffilie(numero_matricule, numero_telephone, numero_identite) {
     try {
-        const affilie = await findByNumeroMatricule(numeroMatricule);
+        const affilie = await findByNumeroIdentite(numero_identite);
+        if (!affilie) {
+            throw new Error('Affilié non trouvé');
+        }
+        console.log(affilie);
 
-        if (!affilie || affilie.numero_telephone !== telephone || affilie.numero_identite !== numeroIdentite) {
-            throw new Error('Informations d\'identification non valides');
+        const isMatriculeValid = await bcrypt.compare(numero_matricule, affilie.numero_matricule);
+        if (!isMatriculeValid) {
+            throw new Error('Numéro de matricule invalide');
         }
 
-        const isMatriculeValid = await bcrypt.compare(numeroMatricule, affilie.numero_matricule);
-        if (!isMatriculeValid) {
-            throw new Error('Informations d\'identification non valides');
+        if (affilie.numero_telephone !== numero_telephone) {
+            throw new Error('Numéro de téléphone invalide');
         }
 
         return affilie;

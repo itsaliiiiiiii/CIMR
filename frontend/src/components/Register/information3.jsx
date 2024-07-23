@@ -1,4 +1,4 @@
-import React, { useState ,useEffect} from 'react';
+import React, { useState, useEffect } from 'react';
 import { useNavigate } from 'react-router-dom';
 import axios from 'axios';
 
@@ -12,7 +12,6 @@ const agences = [
     "Agence Tanger",
     "Agence Agadir",
     "Agence Oujda",
-    "Agence Oujda",
 ];
 
 const API_BASE_URL = 'http://localhost:4000/cimr';
@@ -23,7 +22,7 @@ export default function Information3() {
         date_rdv: '',
         agence: ''
     });
-    const [error, setError] = useState('');
+    const [errors, setErrors] = useState({});
     const [isLoading, setIsLoading] = useState(false);
     const [affilieInfo, setAffilieInfo] = useState(null);
 
@@ -32,7 +31,10 @@ export default function Information3() {
         if (storedAffilieInfo) {
             setAffilieInfo(JSON.parse(storedAffilieInfo));
         } else {
-            setError("Information d'affilié non trouvée. Veuillez vous inscrire d'abord.");
+            setErrors(prevErrors => ({
+                ...prevErrors,
+                affilieInfo: "Information d'affilié non trouvée. Veuillez vous inscrire d'abord."
+            }));
         }
     }, []);
 
@@ -42,15 +44,52 @@ export default function Information3() {
             ...prevState,
             [name]: value
         }));
+
+        // Clear error when user starts typing
+        setErrors(prevErrors => ({ ...prevErrors, [name]: '' }));
+    };
+
+    const handleButtonPasManitenant = () => {
+        navigate("/login");
+    };
+
+    const validateForm = () => {
+        const newErrors = {};
+
+        if (!formData.date_rdv) {
+            newErrors.date_rdv = 'La date de rendez-vous est requise';
+        } else {
+            const selectedDate = new Date(formData.date_rdv);
+            const today = new Date();
+            today.setHours(0, 0, 0, 0);
+            if (selectedDate < today) {
+                newErrors.date_rdv = 'La date de rendez-vous doit être dans le futur';
+            }
+        }
+
+        if (!formData.agence) {
+            newErrors.agence = 'L\'agence est requise';
+        }
+
+        setErrors(newErrors);
+        return Object.keys(newErrors).length === 0;
     };
 
     const handleSubmit = async (e) => {
         e.preventDefault();
         setIsLoading(true);
-        setError('');
+        setErrors({});
 
         if (!affilieInfo) {
-            setError("Information d'affilié non trouvée. Veuillez vous inscrire d'abord.");
+            setErrors(prevErrors => ({
+                ...prevErrors,
+                affilieInfo: "Information d'affilié non trouvée. Veuillez vous inscrire d'abord."
+            }));
+            setIsLoading(false);
+            return;
+        }
+
+        if (!validateForm()) {
             setIsLoading(false);
             return;
         }
@@ -78,11 +117,14 @@ export default function Information3() {
 
             console.log('Réponse du serveur:', response.data);
 
-            localStorage.setItem('rendezVousInfo', JSON.stringify(response.data));
+            localStorage.setItem('rendezVousInfo', JSON.stringify(formData));
             navigate('/register/information/rendezvous');
         } catch (error) {
             console.error('Erreur lors de la création du rendez-vous:', error);
-            setError(error.response?.data?.message || 'Une erreur est survenue lors de la création du rendez-vous');
+            setErrors(prevErrors => ({
+                ...prevErrors,
+                submit: error.response?.data?.message || 'Une erreur est survenue lors de la création du rendez-vous'
+            }));
         } finally {
             setIsLoading(false);
         }
@@ -109,18 +151,17 @@ export default function Information3() {
                             <div className="card mb-5">
                                 <div className="card-body d-flex flex-column align-items-center">
                                     <form className="text-center w-100" onSubmit={handleSubmit}>
-                                        {error && <div className="alert alert-danger">{error}</div>}
                                         <div className="mb-3">
                                             <label htmlFor="date_rdv" className="form-label">Date du rendez-vous</label>
                                             <input
-                                                className="form-control"
+                                                className={`form-control ${errors.date_rdv ? 'is-invalid' : ''}`}
                                                 type="date"
                                                 id="date_rdv"
                                                 name="date_rdv"
                                                 value={formData.date_rdv}
                                                 onChange={handleChange}
-                                                required
                                             />
+                                            {errors.date_rdv && <div className="invalid-feedback">{errors.date_rdv}</div>}
                                         </div>
                                         {formData.date_rdv && (
                                             <div className="mb-3">
@@ -130,12 +171,11 @@ export default function Information3() {
                                         <div className="mb-3">
                                             <label htmlFor="agence" className="form-label">Choisir une agence</label>
                                             <select
-                                                className="form-control"
+                                                className={`form-control ${errors.agence ? 'is-invalid' : ''}`}
                                                 id="agence"
                                                 name="agence"
                                                 value={formData.agence}
                                                 onChange={handleChange}
-                                                required
                                             >
                                                 <option value="">Sélectionnez une agence</option>
                                                 {agences.map((agence, index) => (
@@ -144,11 +184,17 @@ export default function Information3() {
                                                     </option>
                                                 ))}
                                             </select>
+                                            {errors.agence && <div className="invalid-feedback">{errors.agence}</div>}
                                         </div>
                                         <div className="mb-3">
                                             <button className="btn btn-primary d-block w-100" type="submit" disabled={isLoading}>
                                                 {isLoading ? 'Chargement...' : 'Confirmer le rendez-vous'}
                                             </button>
+                                        </div>
+                                        {errors.affilieInfo && <div className="alert alert-danger">{errors.affilieInfo}</div>}
+                                        {errors.submit && <div className="alert alert-danger">{errors.submit}</div>}
+                                        <div className="mb-3">
+                                            <a style={{ cursor: "pointer" }} onClick={handleButtonPasManitenant}>Pas Maintenant</a>
                                         </div>
                                     </form>
                                 </div>
