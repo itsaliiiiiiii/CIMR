@@ -1,6 +1,11 @@
 import React from "react";
-
+import { useNavigate } from "react-router-dom";
 export default function AfficherRendezVousPage() {
+    const navigate = useNavigate();
+    const handleDeconection = () => {
+        navigate('/login');
+        localStorage.removeItem('tokenCIMR');
+    }
     return (
         <div className="container py-4">
             <h1 className="text-center mb-5">Mes Rendez-vous</h1>
@@ -31,6 +36,11 @@ export default function AfficherRendezVousPage() {
             <div className="text-center mt-5">
                 <button className="btn btn-success btn-lg" onClick={() => console.log('Nouveau rendez-vous')}>
                     Prendre un nouveau rendez-vous
+                </button>
+            </div>
+            <div className="text-center mt-5">
+                <button className="btn btn-success btn-lg" onClick={handleDeconection}>
+                    Deconnection
                 </button>
             </div>
 
