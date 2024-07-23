@@ -18,6 +18,7 @@ body {
         border-color: $secondary-color;
     }
 
+    select:focus,
     input:focus {
         border-color: $secondary-color !important;
         box-shadow: 0 0 0 0.1rem $secondary-color !important;

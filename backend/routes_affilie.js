@@ -12,17 +12,20 @@ const verifyToken = (req, res, next) => {
     const authHeader = req.headers['authorization'];
     if (!authHeader) return res.status(403).json({ message: 'Aucun token fourni' });
 
-    const token = authHeader.split(' ')[1]; 
+    const token = authHeader.split(' ')[1];
     if (!token) return res.status(403).json({ message: 'Format de token invalide' });
 
     jwt.verify(token, process.env.JWT_SECRET, (err, decoded) => {
         if (err) return res.status(401).json({ message: 'Token non valide' });
-        req.numero_matricule = decoded.numero_matricule;
         req.numero_identite = decoded.numero_identite;
+        req.numero_matricule = decoded.numero_matricule;
         next();
     });
 };
 
+router.get('/verify-token', verifyToken, (req, res) => {
+    res.json({ isValid: true, numero_identite: req.numero_identite, numero_matricule: req.numero_matricule });
+});
 
 // Route d'inscription d'un affilié
 router.post('/register', async (req, res) => {
@@ -40,7 +43,7 @@ router.post('/register', async (req, res) => {
             nom, prenom, email, date_naissance, numero_telephone,
             pays, ville, type_identite, numero_identite
         );
-        console.log(newAffilie);
+
         const token_user = jwt.sign({ numero_identite: numero_identite, numero_matricule: newAffilie.numero_matricule }, process.env.JWT_SECRET, {
             expiresIn: '1h'
         });
@@ -96,10 +99,6 @@ router.post('/rendez-vous', verifyToken, async (req, res) => {
     try {
         const decoded = bcrypt.compare(req.body.numero_matricule, req.numero_matricule);
 
-        console.log(decoded.numero_matricule);
-        console.log(req.numero_identite);
-        console.log(req.body.numero_identite);
-
         if (!decoded || req.numero_identite != req.body.numero_identite) {
             return res.status(404).json({ message: 'Affilié non trouvé. Impossible de créer un rendez-vous.' });
         }
@@ -114,7 +113,7 @@ router.post('/rendez-vous', verifyToken, async (req, res) => {
 
         const rendezVousId = await rendezVousGestion.creerRendezVous(newRendezVous);
 
-        return res.status(201).json({ message: 'Rendez-vous créé avec succès', id: rendezVousId });
+        return res.status(201).json({ message: 'Rendez-vous créé avec succès' });
     } catch (error) {
         res.status(500).json({ message: 'Erreur lors de la création du rendez-vous', error: error.message });
     }

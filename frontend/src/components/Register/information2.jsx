@@ -84,7 +84,7 @@ export default function Information2() {
             const response = await axios.post(`${API_BASE_URL}/register`, affilieData);
 
             if (response.data.token && response.data.affilie) {
-                localStorage.setItem('token', response.data.token);
+                localStorage.setItem('tokenCIMR', response.data.token);
                 localStorage.setItem('affilieInfo', JSON.stringify(response.data.affilie));
                 localStorage.removeItem('affilieData1');
                 navigate('/register/information/personnel');

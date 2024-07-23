@@ -95,7 +95,7 @@ export default function Information3() {
         }
 
         try {
-            const token = localStorage.getItem('token');
+            const token = localStorage.getItem('tokenCIMR');
             if (!token) {
                 throw new Error("Token d'authentification non trouvé");
             }
@@ -114,8 +114,6 @@ export default function Information3() {
                     'Authorization': `Bearer ${token}`
                 }
             });
-
-            console.log('Réponse du serveur:', response.data);
 
             localStorage.setItem('rendezVousInfo', JSON.stringify(formData));
             navigate('/register/information/rendezvous');
