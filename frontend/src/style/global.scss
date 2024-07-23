@@ -35,20 +35,24 @@ body {
     margin-bottom: 50px;
     .form{
         margin: 50px 0 !important;
-        .captcha{
-            display: flex;
-            flex-direction: column;
-            gap: 20px;
-            .code-captcha-form{
-                display: flex;
-                flex-direction: row;
-                gap: 40px;
-                .code-captcha{
-                    min-width: 100px;
-                    font-size: 24px;
-                }
-                
-            }
+        
+    }
+}
+
+.captcha {
+    display: flex;
+    flex-direction: column !important;
+    gap: 20px;
+
+    .code-captcha-form {
+        display: flex;
+        flex-direction: row !important;
+        gap: 40px;
+
+        .code-captcha {
+            min-width: 100px;
+            font-size: 24px;
         }
+
     }
 }

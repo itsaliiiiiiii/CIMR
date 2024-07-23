@@ -1,4 +1,4 @@
-import React, { useState } from 'react';
+import React, { useState ,useEffect} from 'react';
 import { useNavigate } from 'react-router-dom';
 import axios from 'axios';
 
@@ -25,6 +25,16 @@ export default function Information3() {
     });
     const [error, setError] = useState('');
     const [isLoading, setIsLoading] = useState(false);
+    const [affilieInfo, setAffilieInfo] = useState(null);
+
+    useEffect(() => {
+        const storedAffilieInfo = localStorage.getItem('affilieInfo');
+        if (storedAffilieInfo) {
+            setAffilieInfo(JSON.parse(storedAffilieInfo));
+        } else {
+            setError("Information d'affilié non trouvée. Veuillez vous inscrire d'abord.");
+        }
+    }, []);
 
     const handleChange = (e) => {
         const { name, value } = e.target;
@@ -39,37 +49,27 @@ export default function Information3() {
         setIsLoading(true);
         setError('');
 
+        if (!affilieInfo) {
+            setError("Information d'affilié non trouvée. Veuillez vous inscrire d'abord.");
+            setIsLoading(false);
+            return;
+        }
+
         try {
-            const affilieData1 = JSON.parse(localStorage.getItem('affilieData1') || '{}');
-            const affilieData2 = JSON.parse(localStorage.getItem('affilieData2') || '{}');
-            const affilieData = {
-                ...affilieData1,
-                ...affilieData2,
-                ...formData,
-                statutDocuments: 'en_attente'
-            };
-
-            // Créer l'affilié et récupérer le numéro de matricule généré
-            const affilieResponse = await axios.post(`${API_BASE_URL}/register`, affilieData);
-            const matricule = affilieResponse.data.affilie.nouvelAffilie.numero_matricule;
-
-            if (!matricule) {
-                throw new Error("Impossible de récupérer le numéro de matricule");
+            const token = localStorage.getItem('token');
+            if (!token) {
+                throw new Error("Token d'authentification non trouvé");
             }
 
             const rendezVousData = {
-                numero_matricule: matricule,
-                numero_identite: affilieData.numero_identite,
+                numero_matricule: affilieInfo.numero_matricule,
+                numero_identite: affilieInfo.numero_identite,
                 agence: formData.agence,
                 date_rdv: formData.date_rdv,
                 heure_rdv: null,
                 type_service: "poser les documents d'inscription"
             };
 
-            localStorage.setItem('token', affilieResponse.data.token);
-            const token = affilieResponse.data.token;
-
-            // Créer le rendez-vous
             const response = await axios.post(`${API_BASE_URL}/rendez-vous`, rendezVousData, {
                 headers: {
                     'Authorization': `Bearer ${token}`
@@ -78,11 +78,11 @@ export default function Information3() {
 
             console.log('Réponse du serveur:', response.data);
 
-            localStorage.setItem('affilieData3', JSON.stringify({ ...formData, numero_matricule: matricule }));
-            navigate('/register/information');
+            localStorage.setItem('rendezVousInfo', JSON.stringify(response.data));
+            navigate('/register/information/rendezvous');
         } catch (error) {
-            console.error('Erreur lors de la création de l\'affilié ou du rendez-vous:', error);
-            setError(error.response?.data?.message || 'Une erreur est survenue lors de la création de l\'affilié ou du rendez-vous');
+            console.error('Erreur lors de la création du rendez-vous:', error);
+            setError(error.response?.data?.message || 'Une erreur est survenue lors de la création du rendez-vous');
         } finally {
             setIsLoading(false);
         }

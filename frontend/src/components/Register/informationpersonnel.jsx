@@ -1,20 +1,14 @@
 import React, { useEffect, useState } from 'react';
 import { jsPDF } from "jspdf";
-
-const formatDate = (dateString) => {
-    const options = { year: 'numeric', month: 'long', day: 'numeric' };
-    return new Date(dateString).toLocaleDateString('fr-FR', options);
-};
+import { useNavigate } from 'react-router-dom';
 
 export default function Information() {
     const [allData, setAllData] = useState({});
+    const navigate = useNavigate();
 
     useEffect(() => {
-        const data1 = JSON.parse(localStorage.getItem('affilieData1') || '{}');
-        const data2 = JSON.parse(localStorage.getItem('affilieData2') || '{}');
-        const data3 = JSON.parse(localStorage.getItem('affilieData3') || '{}');
-
-        const combinedData = { ...data1, ...data2, ...data3 };
+        const data = JSON.parse(localStorage.getItem('affilieInfo') || '{}');
+        const combinedData = { ...data};
         setAllData(combinedData);
     }, []);
 
@@ -36,22 +30,10 @@ export default function Information() {
         doc.save("informations_personnelles.pdf");
     };
 
-    const downloadAppointmentInfo = () => {
-        const doc = new jsPDF();
-        doc.setFontSize(16);
-        doc.text("Informations de Rendez-vous", 10, 10);
-        doc.setFontSize(12);
-        doc.text(`Nom: ${allData.nom}`, 10, 30);
-        doc.text(`Prénom: ${allData.prenom}`, 10, 40);
-        doc.text(`Téléphone: ${allData.numero_telephone}`, 10, 90);
-        doc.text(`Type d'identité: ${allData.type_identite}`, 10, 100);
-        doc.text(`Numéro d'identité: ${allData.numero_identite}`, 10, 110);
-        doc.text(`Matricule: ${allData.numero_matricule}`, 10, 20);
-        doc.text(`Date du rendez-vous: ${allData.date_rdv}`, 10, 30);
-        doc.text(`Agence: ${allData.agence}`, 10, 40);
-        doc.text(`Type de service: poser les document d'inscription`, 10, 50);
-        doc.save("informations_rendez_vous.pdf");
-    };
+    const handlesubmit = () => {
+        navigate("/register/rendezvous");
+    }
+
 
     return (
         <div id="page_information_summary">
@@ -85,24 +67,14 @@ export default function Information() {
                                             Télécharger les informations personnelles
                                         </button>
                                     </div>
-                                </div>
-                            </div>
-                            <div className="card mb-5">
-                                <div className="card-body">
-                                    <h3 className="card-title">Informations de Rendez-vous</h3>
-                                    <ul className="list-group list-group-flush">
-                                        <li className="list-group-item">Matricule: {allData.numero_matricule}</li>
-                                        <li className="list-group-item">Date du rendez-vous: {allData.date_rdv}</li>
-                                        <li className="list-group-item">Agence: {allData.agence}</li>
-                                        <li className="list-group-item">Type de service: poser les document d'inscription</li>
-                                    </ul>
-                                    <div className="mt-3">
-                                        <button className="btn btn-primary" onClick={downloadAppointmentInfo}>
-                                            Télécharger les informations de rendez-vous
+                                    <div className="mt-3 ">
+                                        <button className="btn btn-primary" type="submit" onClick={handlesubmit} >
+                                            suivant
                                         </button>
                                     </div>
                                 </div>
                             </div>
+                            
                         </div>
                     </div>
                 </div>

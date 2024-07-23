@@ -24,24 +24,7 @@ const verifyToken = (req, res, next) => {
 };
 
 // Fonction pour générer le numéro de matricule
-const generateMatricule = (nom, prenom, date_naissance) => {
-    const firstLetterNom = nom.charAt(0).toUpperCase();
-    const firstLetterPrenom = prenom.charAt(0).toUpperCase();
 
-    const date = new Date(date_naissance);
-    const day = String(date.getDate()).padStart(2, '0');
-    const month = String(date.getMonth() + 1).padStart(2, '0');
-    const year = String(date.getFullYear()).slice(-2);
-
-    const datePart = day + month + year;
-
-    const generateRandomChars = () => {
-        const chars = 'ABCDEFGHIJKLMNOPQRSTUVWXYZ0123456789';
-        return Array(4).fill().map(() => chars[Math.floor(Math.random() * chars.length)]).join('');
-    };
-
-    return `${firstLetterNom}${firstLetterPrenom}${datePart}${generateRandomChars()}`;
-};
 
 // Route d'inscription d'un affilié
 router.post('/register', async (req, res) => {
@@ -51,12 +34,16 @@ router.post('/register', async (req, res) => {
             pays, ville, type_identite, numero_identite
         } = req.body;
 
-        const numero_matricule = generateMatricule(nom, prenom, date_naissance);
+        if (!nom || !prenom || !email || !date_naissance || !numero_telephone || !pays || !ville || !type_identite || !numero_identite) {
+            return res.status(400).json({ message: 'Tous les champs sont requis' });
+        }
+
         const newAffilie = await affilieGestion.creerAffilie(
             nom, prenom, email, date_naissance, numero_telephone,
-            pays, ville, type_identite, numero_identite, numero_matricule
+            pays, ville, type_identite, numero_identite
         );
-        const token_user = jwt.sign({ numero_matricule: numero_matricule, numero_identite: numero_identite }, process.env.JWT_SECRET, {
+        console.log(newAffilie);
+        const token_user = jwt.sign({ numero_identite: numero_identite, numero_matricule: newAffilie.numero_matricule }, process.env.JWT_SECRET, {
             expiresIn: '1h'
         });
 

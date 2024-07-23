@@ -1,11 +1,15 @@
 import React, { useState } from 'react';
 import { useNavigate } from 'react-router-dom';
+import axios from 'axios';
+import Captcha from "../Captcha";
 
 const typesIdentite = [
     "Carte Nationale d'Identité",
     "Passeport",
     "Permis de conduire"
 ];
+
+const API_BASE_URL = 'http://localhost:4000/cimr';
 
 export default function Information2() {
     const navigate = useNavigate();
@@ -15,7 +19,10 @@ export default function Information2() {
         type_identite: '',
         numero_identite: ''
     });
+
     const [error, setError] = useState('');
+    const [isLoading, setIsLoading] = useState(false);
+    const [captchaValid, setCaptchaValid] = useState(false); // Add this state
 
     const handleChange = (e) => {
         const { name, value } = e.target;
@@ -25,10 +32,34 @@ export default function Information2() {
         }));
     };
 
-    const handleSubmit = (e) => {
+    const handleSubmit = async (e) => {
         e.preventDefault();
-        localStorage.setItem('affilieData2', JSON.stringify(formData));
-        navigate('/register/information3');
+        setError('');
+        setIsLoading(true);
+
+        try {
+            const affilieData1 = JSON.parse(localStorage.getItem('affilieData1') || '{}');
+            const affilieData = {
+                ...affilieData1,
+                ...formData
+            };
+
+            const response = await axios.post(`${API_BASE_URL}/register`, affilieData);
+
+            if (response.data.token && response.data.affilie) {
+                localStorage.setItem('token', response.data.token);
+                localStorage.setItem('affilieInfo', JSON.stringify(response.data.affilie));
+                localStorage.removeItem('affilieData1');
+                navigate('/register/information/personnel');
+            } else {
+                throw new Error("Réponse invalide du serveur");
+            }
+        } catch (error) {
+            console.error('Erreur lors de la création de l\'affilié:', error);
+            setError(error.response?.data?.message || 'Une erreur est survenue lors de la création de l\'affilié');
+        } finally {
+            setIsLoading(false);
+        }
     };
 
     return (
@@ -96,8 +127,15 @@ export default function Information2() {
                                             />
                                         </div>
                                         <div className="mb-3">
-                                            <button className="btn btn-primary d-block w-100" type="submit">
-                                                Suivant
+                                            <Captcha onValidate={setCaptchaValid} />
+                                        </div>
+                                        <div className="mb-3">
+                                            <button
+                                                className="btn btn-primary d-block w-100"
+                                                type="submit"
+                                                disabled={isLoading || !captchaValid} 
+                                            >
+                                                {isLoading ? 'Chargement...' : 'Soumettre'}
                                             </button>
                                         </div>
                                     </form>

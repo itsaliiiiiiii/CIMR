@@ -38,20 +38,39 @@ async function verifierAffilieExiste(numeroMatricule) {
         throw error;
     }
 }
+const generateMatricule = (nom, prenom, date_naissance) => {
+    const firstLetterNom = nom.charAt(0).toUpperCase();
+    const firstLetterPrenom = prenom.charAt(0).toUpperCase();
+
+    const date = new Date(date_naissance);
+    const day = String(date.getDate()).padStart(2, '0');
+    const month = String(date.getMonth() + 1).padStart(2, '0');
+    const year = String(date.getFullYear()).slice(-2);
+
+    const datePart = day + month + year;
+
+    const generateRandomChars = () => {
+        const chars = 'ABCDEFGHIJKLMNOPQRSTUVWXYZ0123456789';
+        return Array(4).fill().map(() => chars[Math.floor(Math.random() * chars.length)]).join('');
+    };
+
+    return `${firstLetterNom}${firstLetterPrenom}${datePart}${generateRandomChars()}`;
+};
 
 async function creerAffilie(nom, prenom, email, date_naissance, numero_telephone,
-    pays, ville, type_identite, numero_identite, numero_matricule) {
+    pays, ville, type_identite, numero_identite) {
     try {
         const existingAffilie = await findByNumeroIdentite(numero_identite);
         if (existingAffilie) {
             throw new Error('Un affilié avec ce numéro d\'identité existe déjà');
         }
+        const numero_matricule = generateMatricule(nom, prenom, date_naissance);
 
         const hashed_matricule = await bcrypt.hash(numero_matricule, 10);
 
         const nouvelAffilie = await creerAffilieDansBD(nom, prenom, email, date_naissance, numero_telephone,
             pays, ville, type_identite, numero_identite, hashed_matricule);
-        return { nouvelAffilie };
+        return { ...nouvelAffilie, numero_matricule: numero_matricule };
     } catch (error) {
         console.error('Erreur 3 de la création:', error);
         throw error;
