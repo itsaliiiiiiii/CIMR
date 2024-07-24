@@ -103,6 +103,7 @@ export default function Information3() {
             const rendezVousData = {
                 numero_matricule: affilieInfo.numero_matricule,
                 numero_identite: affilieInfo.numero_identite,
+                id_affilie: affilieInfo.id_affilie,
                 agence: formData.agence,
                 date_rdv: formData.date_rdv,
                 heure_rdv: null,

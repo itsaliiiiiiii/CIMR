@@ -3,11 +3,12 @@ const { connection } = require('../base_de_donnes/db');
 
 class RendezVousDao {
     async create(rendezVous) {
-        const query = 'INSERT INTO rendez_vous (numero_matricule, agence, date_rdv, heure_rdv, type_service) VALUES (?, ?, ?, ?, ?)';
+        const query = 'INSERT INTO rendez_vous (numero_matricule, id_affilie,agence, date_rdv, heure_rdv, type_service) VALUES (?, ?, ?, ?, ?,?)';
         try {
 
             const [result] = await connection.query(query, [
                 rendezVous.numero_matricule,
+                rendezVous.id_affilie,
                 rendezVous.agence,
                 rendezVous.date_rdv,
                 rendezVous.heure_rdv,

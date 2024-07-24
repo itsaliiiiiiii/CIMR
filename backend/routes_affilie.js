@@ -19,12 +19,13 @@ const verifyToken = (req, res, next) => {
         if (err) return res.status(401).json({ message: 'Token non valide' });
         req.numero_identite = decoded.numero_identite;
         req.numero_matricule = decoded.numero_matricule;
+        req.id_affilie = decoded.id_affilie;
         next();
     });
 };
 
 router.get('/verify-token', verifyToken, (req, res) => {
-    res.json({ isValid: true, numero_identite: req.numero_identite, numero_matricule: req.numero_matricule });
+    res.json({ isValid: true, numero_identite: req.numero_identite, numero_matricule: req.numero_matricule, id_affilie: req.id_affilie });
 });
 
 // Route d'inscription d'un affilié
@@ -35,16 +36,12 @@ router.post('/register', async (req, res) => {
             pays, ville, type_identite, numero_identite
         } = req.body;
 
-        if (!nom || !prenom || !email || !date_naissance || !numero_telephone || !pays || !ville || !type_identite || !numero_identite) {
-            return res.status(400).json({ message: 'Tous les champs sont requis' });
-        }
-
         const newAffilie = await affilieGestion.creerAffilie(
             nom, prenom, email, date_naissance, numero_telephone,
             pays, ville, type_identite, numero_identite
         );
 
-        const token_user = jwt.sign({ numero_identite: numero_identite, numero_matricule: newAffilie.numero_matricule }, process.env.JWT_SECRET, {
+        const token_user = jwt.sign({ numero_identite: numero_identite, numero_matricule: newAffilie.numero_matricule, id_affilie: newAffilie.id_affilie }, process.env.JWT_SECRET, {
             expiresIn: '1h'
         });
 
@@ -53,7 +50,7 @@ router.post('/register', async (req, res) => {
         if (error.message.includes('existe déjà')) {
             res.status(400).json({ message: error.message });
         } else {
-            res.status(500).json({ message: 'Erreur 4 de la création de l\'affilié', error: error.message });
+            res.status(500).json({ message: 'Erreur de la création de l\'affilié', error: error.message });
         }
     }
 });
@@ -68,7 +65,7 @@ router.post('/auth', async (req, res) => {
 
         const affilie = await affilieGestion.authentifierAffilie(numero_matricule, numero_telephone, numero_identite);
 
-        const token = jwt.sign({ numero_matricule: numero_matricule, numero_identite: numero_identite }, process.env.JWT_SECRET, {
+        const token = jwt.sign({ numero_matricule: numero_matricule, numero_identite: numero_identite, id_affilie: affilie.id_affilie }, process.env.JWT_SECRET, {
             expiresIn: '1h'
         });
 
@@ -105,6 +102,7 @@ router.post('/rendez-vous', verifyToken, async (req, res) => {
 
         const newRendezVous = {
             numero_matricule: req.body.numero_matricule,
+            id_affilie: req.id_affilie,
             agence: req.body.agence,
             date_rdv: req.body.date_rdv,
             heure_rdv: req.body.heure_rdv === null ? '08:00:00' : req.body.heure_rdv,

@@ -1,4 +1,4 @@
-const { findByNumeroIdentite, creerAffilie: creerAffilieDansBD, findByNumeroMatricule } = require('../dao/AffilieDao');
+const { findByNumeroIdentite, creerAffilie: creerAffilieDansBD, findByNumeroMatricule, findByEmail, findByTelephone } = require('../dao/AffilieDao');
 const bcrypt = require('bcrypt');
 
 async function obtenirAffilie(numeroMatricule) {
@@ -60,10 +60,25 @@ const generateMatricule = (nom, prenom, date_naissance) => {
 async function creerAffilie(nom, prenom, email, date_naissance, numero_telephone,
     pays, ville, type_identite, numero_identite) {
     try {
+        if (!nom || !prenom || !email || !date_naissance || !numero_telephone || !pays || !ville || !type_identite || !numero_identite) {
+            return res.status(400).json({ message: 'Tous les champs sont requis' });
+        }
+
         const existingAffilie = await findByNumeroIdentite(numero_identite);
         if (existingAffilie) {
             throw new Error('Un affilié avec ce numéro d\'identité existe déjà');
         }
+
+        const existingAffilie2 = await findByEmail(email);
+        if (existingAffilie2) {
+            throw new Error('Un affilié avec ce email d\'identité existe déjà');
+        }
+
+        const existingAffilie3 = await findByTelephone(numero_telephone);
+        if (existingAffilie3) {
+            throw new Error('Un affilié avec ce numéro telephone existe déjà');
+        }
+
         const numero_matricule = generateMatricule(nom, prenom, date_naissance);
 
         const hashed_matricule = await bcrypt.hash(numero_matricule, 10);
@@ -72,7 +87,7 @@ async function creerAffilie(nom, prenom, email, date_naissance, numero_telephone
             pays, ville, type_identite, numero_identite, hashed_matricule);
         return { ...nouvelAffilie, numero_matricule: numero_matricule };
     } catch (error) {
-        console.error('Erreur 3 de la création:', error);
+        console.error('Erreur de la création:', error);
         throw error;
     }
 }
