@@ -98,6 +98,7 @@ async function authentifierAffilie(numero_matricule, numero_telephone, numero_id
         if (!affilie) {
             throw new Error('Affilié non trouvé');
         }
+        
         console.log(affilie);
 
         const isMatriculeValid = await bcrypt.compare(numero_matricule, affilie.numero_matricule);

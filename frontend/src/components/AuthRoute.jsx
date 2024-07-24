@@ -32,7 +32,7 @@ const AuthRoute = ({ children }) => {
                 }
             } catch (error) {
                 console.error('Error verifying token:', error);
-                localStorage.removeItem('token');
+                localStorage.removeItem('tokenCIMR');
                 setIsAuthenticated(false);
             }
 

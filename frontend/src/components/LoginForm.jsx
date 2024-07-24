@@ -77,7 +77,7 @@ export default function Login() {
                 if (!response.ok) {
                     throw new Error(data.message || 'Une erreur est survenue lors de la connexion');
                 }
-                localStorage.setItem('token', data.token);
+                localStorage.setItem('tokenCIMR', data.token);
                 navigate('/rendezvous');
             } else {
                 const text = await response.text();
@@ -107,6 +107,17 @@ export default function Login() {
                                     <form className="text-center" onSubmit={handleSubmit}>
                                         <div className="mb-3">
                                             <input
+                                                className={`form-control ${errors.numero_identite ? 'is-invalid' : ''}`}
+                                                type="text"
+                                                name="numero_identite"
+                                                placeholder="Numéro d'identité"
+                                                value={formData.numero_identite}
+                                                onChange={handleChange}
+                                            />
+                                            {errors.numero_identite && <div className="invalid-feedback">{errors.numero_identite}</div>}
+                                        </div>
+                                        <div className="mb-3">
+                                            <input
                                                 className={`form-control ${errors.numero_matricule ? 'is-invalid' : ''}`}
                                                 type="text"
                                                 name="numero_matricule"
@@ -127,17 +138,7 @@ export default function Login() {
                                             />
                                             {errors.numero_telephone && <div className="invalid-feedback">{errors.numero_telephone}</div>}
                                         </div>
-                                        <div className="mb-3">
-                                            <input
-                                                className={`form-control ${errors.numero_identite ? 'is-invalid' : ''}`}
-                                                type="text"
-                                                name="numero_identite"
-                                                placeholder="Numéro d'identité"
-                                                value={formData.numero_identite}
-                                                onChange={handleChange}
-                                            />
-                                            {errors.numero_identite && <div className="invalid-feedback">{errors.numero_identite}</div>}
-                                        </div>
+                                        
                                         <Captcha onValidate={setCaptchaValid} />
                                         <div className="mb-3">
                                             <button

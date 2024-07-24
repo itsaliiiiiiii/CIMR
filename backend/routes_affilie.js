@@ -4,7 +4,7 @@ const jwt = require('jsonwebtoken');
 const bcrypt = require('bcrypt');
 
 const { RendezVous } = require('./pojo/RendezVous');
-
+const { fetchCountries, fetchCities } = require('./dao/CountryCitiesDao');
 const affilieGestion = require('./gestion/AffilieGestion');
 const rendezVousGestion = require('./gestion/RendezVousGestion');
 
@@ -174,6 +174,35 @@ router.delete('/rendez-vous/:id', verifyToken, async (req, res) => {
         } else {
             res.status(500).json({ message: 'Erreur lors de la suppression du rendez-vous', error: error.message });
         }
+    }
+});
+
+// route fetch countries and cities
+router.get('/countries', async (req, res) => {
+    try {
+        const countries = await fetchCountries();
+        if (countries) {
+            res.json(countries);
+        } else {
+            res.status(404).json({ message: 'No countries found' });
+        }
+    } catch (error) {
+        console.error('Error fetching countries:', error);
+        res.status(500).json({ message: 'Internal server error' });
+    }
+});
+
+router.get('/cities/:countryId', async (req, res) => {
+    try {
+        const cities = await fetchCities(req.params.countryId);
+        if (cities) {
+            res.json(cities);
+        } else {
+            res.status(404).json({ message: 'No cities found for this country' });
+        }
+    } catch (error) {
+        console.error('Error fetching cities:', error);
+        res.status(500).json({ message: 'Internal server error' });
     }
 });
 

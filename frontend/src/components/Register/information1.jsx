@@ -1,10 +1,5 @@
 import React, { useState, useEffect } from 'react';
 import { useNavigate } from 'react-router-dom';
-import { City } from 'country-state-city';
-import countries from 'i18n-iso-countries';
-
-// Importer les locales français
-countries.registerLocale(require("i18n-iso-countries/langs/fr.json"));
 
 export default function Information1() {
     const navigate = useNavigate();
@@ -20,15 +15,36 @@ export default function Information1() {
     const [errors, setErrors] = useState({});
 
     useEffect(() => {
-        const countryCodes = Object.keys(countries.getNames("fr", { select: "official" }));
-        const sortedCountries = countryCodes
-            .map(code => ({
-                code,
-                name: countries.getName(code, "fr", { select: "official" })
-            }))
-            .sort((a, b) => a.name.localeCompare(b.name, 'fr'));
-        setCountriesList(sortedCountries);
+        fetchCountries();
     }, []);
+
+    const fetchCountries = async () => {
+        try {
+            const response = await fetch('http://localhost:4000/cimr/countries');
+            if (response.ok) {
+                const data = await response.json();
+                setCountriesList(data);
+            } else {
+                console.error('Failed to fetch countries');
+            }
+        } catch (error) {
+            console.error('Error fetching countries:', error);
+        }
+    };
+
+    const fetchCities = async (countryId) => {
+        try {
+            const response = await fetch(`http://localhost:4000/cimr/cities/${countryId}`);
+            if (response.ok) {
+                const data = await response.json();
+                setCities(data);
+            } else {
+                console.error('Failed to fetch cities');
+            }
+        } catch (error) {
+            console.error('Error fetching cities:', error);
+        }
+    };
 
     const handleChange = (e) => {
         const { name, value } = e.target;
@@ -38,14 +54,12 @@ export default function Information1() {
         }));
 
         if (name === 'pays') {
-            const selectedCountry = countriesList.find(country => country.name === value);
+            const selectedCountry = countriesList.find(country => country.country_name === value);
             if (selectedCountry) {
-                const countryCities = City.getCitiesOfCountry(selectedCountry.code);
-                setCities(countryCities);
+                fetchCities(selectedCountry.country_id);
             }
         }
 
-        // Clear error when user starts typing
         setErrors(prevErrors => ({ ...prevErrors, [name]: '' }));
     };
 
@@ -144,8 +158,8 @@ export default function Information1() {
                                             >
                                                 <option value="">Sélectionnez un pays</option>
                                                 {countriesList.map((country) => (
-                                                    <option key={country.code} value={country.name}>
-                                                        {country.name}
+                                                    <option key={country.country_id} value={country.country_name}>
+                                                        {country.country_name}
                                                     </option>
                                                 ))}
                                             </select>
@@ -160,8 +174,8 @@ export default function Information1() {
                                             >
                                                 <option value="">Sélectionnez une ville</option>
                                                 {cities.map((city) => (
-                                                    <option key={city.name} value={city.name}>
-                                                        {city.name}
+                                                    <option key={city.city_id} value={city.city_name}>
+                                                        {city.city_name}
                                                     </option>
                                                 ))}
                                             </select>

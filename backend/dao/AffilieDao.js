@@ -122,6 +122,4 @@ async function creerAffilie(nom, prenom, email, date_naissance, numero_telephone
     }
 }
 
-
-
 module.exports = { findByNumeroIdentite, creerAffilie, findByNumeroMatricule, findByEmail, findByTelephone };
