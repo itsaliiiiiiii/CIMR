@@ -13,6 +13,7 @@ export default function AjouterRendezVousPage() {
         agence: '',
     });
     const [agences, setAgences] = useState([]);
+    const [service, setServices] = useState([]);
     const [loading, setLoading] = useState(false);
     const [errors, setErrors] = useState({});
 
@@ -36,7 +37,10 @@ export default function AjouterRendezVousPage() {
             const selectedDate = new Date(formData.date_rdv);
             if (selectedDate < today) {
                 newErrors.date_rdv = 'La date doit être dans le futur';
+            } else if (selectedDate.getDay() === 0 || selectedDate.getDay() === 6) {
+                newErrors.date_rdv = 'Les rendez-vous ne sont pas disponibles le weekend';
             }
+            
         }
 
         if (!formData.heure_rdv) {
@@ -75,7 +79,7 @@ export default function AjouterRendezVousPage() {
             });
 
             if (response.data.isValid) {
-                navigate('/rendezvous');
+                navigate('/rendezvous', { state: { notification: 'Rendez-vous ajouté avec succès' } });
             } else {
                 throw new Error('Failed to add appointment');
             }
@@ -109,19 +113,43 @@ export default function AjouterRendezVousPage() {
                 }));
             }
         }
+        const fetchServices = async () => {
+            try {
+                const response = await axios.get(`${API_BASE_URL}/service`);
+                if (response.data && Array.isArray(response.data)) {
+                    setServices(response.data);
+                } else {
+                    setErrors(prevErrors => ({
+                        ...prevErrors,
+                        service: 'Aucune agence trouvée'
+                    }));
+                }
+            } catch (error) {
+                setErrors(prevErrors => ({
+                    ...prevErrors,
+                    service: 'Erreur lors de la récupération des agences'
+                }));
+            }
+        }
 
         fetchAgences();
+        fetchServices();
     }, []);
 
     const generateTimeOptions = () => {
         const times = [];
-        for (let hour = 0; hour < 24; hour++) {
+        for (let hour = 8; hour < 16; hour++) {
             for (let minute = 0; minute < 60; minute += 15) {
                 const timeString = `${String(hour).padStart(2, '0')}:${String(minute).padStart(2, '0')}`;
                 times.push(<option key={timeString} value={timeString}>{timeString}</option>);
             }
         }
         return times;
+    };
+
+    const isWeekend = (date) => {
+        const d = new Date(date);
+        return d.getDay() === 0 || d.getDay() === 6;
     };
 
     return (
@@ -142,6 +170,8 @@ export default function AjouterRendezVousPage() {
                                         name="date_rdv"
                                         value={formData.date_rdv}
                                         onChange={handleChange}
+                                        min={new Date().toISOString().split('T')[0]}
+                                        onKeyDown={(e) => e.preventDefault()}
                                     />
                                     {errors.date_rdv && <div className="invalid-feedback">{errors.date_rdv}</div>}
                                 </div>
@@ -162,16 +192,18 @@ export default function AjouterRendezVousPage() {
                                 <div className="mb-3">
                                     <label htmlFor="service" className="form-label">Service</label>
                                     <select
-                                        className={`form-select ${errors.type_service ? 'is-invalid' : ''}`}
+                                        className={`form-control ${errors.type_service ? 'is-invalid' : ''}`}
                                         id="service"
                                         name="type_service"
                                         value={formData.type_service}
                                         onChange={handleChange}
                                     >
-                                        <option value="">Sélectionnez un service</option>
-                                        <option value="Consultation">Consultation</option>
-                                        <option value="Examen">Examen</option>
-                                        <option value="Suivi">Suivi</option>
+                                        <option value="">Sélectionnez Service</option>
+                                        {service.map((agenceObj, index) => (
+                                            <option key={index} value={agenceObj.service}>
+                                                {agenceObj.service}
+                                            </option>
+                                        ))}
                                     </select>
                                     {errors.type_service && <div className="invalid-feedback">{errors.type_service}</div>}
                                 </div>

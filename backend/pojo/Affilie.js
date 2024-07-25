@@ -1,6 +1,6 @@
 class Affilie {
     constructor(nom, prenom, email, dateNaissance, numero_telephone,
-        pays, ville, type_identite, numero_identite, hashedMatricule,id_affilie) {
+        pays, ville, type_identite, numero_identite, hashedMatricule, id_affilie, statusDocuments) {
         this.nom = nom;
         this.prenom = prenom;
         this.email = email;
@@ -12,6 +12,7 @@ class Affilie {
         this.numero_identite = numero_identite;
         this.numero_matricule = hashedMatricule;
         this.id_affilie = id_affilie;
+        this.statusDocuments = statusDocuments;
     }
     
     

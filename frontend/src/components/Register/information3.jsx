@@ -76,6 +76,9 @@ export default function Information3() {
             today.setHours(0, 0, 0, 0);
             if (selectedDate < today) {
                 newErrors.date_rdv = 'La date de rendez-vous doit être dans le futur';
+
+            } else if (selectedDate.getDay() === 0 || selectedDate.getDay() === 6) {
+                newErrors.date_rdv = 'Les rendez-vous ne sont pas disponibles le weekend';
             }
         }
 
@@ -119,7 +122,7 @@ export default function Information3() {
                 agence: formData.agence,
                 date_rdv: formData.date_rdv,
                 heure_rdv: null,
-                type_service: "poser les documents d'inscription"
+                type_service: "POSER LES DOCUMENTS D'INSCRIPTION"
             };
 
             await axios.post(`${API_BASE_URL}/rendez-vous`, rendezVousData, {
@@ -194,6 +197,19 @@ export default function Information3() {
                                                         {agenceObj.agence}
                                                     </option>
                                                 ))}
+                                            </select>
+                                            {errors.agence && <div className="invalid-feedback">{errors.agence}</div>}
+                                        </div>
+                                        <div className="mb-3">
+                                            <label htmlFor="agence" className="form-label">Choisir Service</label>
+                                            <select
+                                                className={`form-control ${errors.service ? 'is-invalid' : ''}`}
+                                                id="service"
+                                                name="service"
+                                                value={formData.service}
+                                                onChange={handleChange}
+                                            >
+                                                <option value="POSER LES DOCUMENTS D'INSCRIPTION">POSER LES DOCUMENTS D'INSCRIPTION</option>
                                             </select>
                                             {errors.agence && <div className="invalid-feedback">{errors.agence}</div>}
                                         </div>

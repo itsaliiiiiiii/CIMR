@@ -78,11 +78,12 @@ class RendezVousDao {
     _createRendezVousFromRow(row) {
         return new RendezVous(
             row.numero_rdv,
-            row.numero_matricule,
+            row.id_affilie,
             row.agence,
             row.date_rdv,
             row.heure_rdv,
-            row.type_service
+            row.type_service,
+            row.etat_rdv
         );
     }
 }

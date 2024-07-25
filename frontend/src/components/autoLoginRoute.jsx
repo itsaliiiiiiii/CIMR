@@ -1,5 +1,5 @@
 import React, { useState, useEffect } from 'react';
-import { Navigate } from 'react-router-dom';
+import { useNavigate } from 'react-router-dom';
 import axios from 'axios';
 
 const API_BASE_URL = 'http://localhost:4000/cimr';
@@ -7,6 +7,7 @@ const API_BASE_URL = 'http://localhost:4000/cimr';
 const AutoLoginRoute = ({ children }) => {
     const [isAuthenticated, setIsAuthenticated] = useState(false);
     const [isLoading, setIsLoading] = useState(true);
+    const navigate = useNavigate();
 
     useEffect(() => {
         const autoLogin = async () => {
@@ -26,6 +27,7 @@ const AutoLoginRoute = ({ children }) => {
 
                 if (response.data.isValid) {
                     setIsAuthenticated(true);
+                    navigate('/rendezvous', { replace: true });
                 } else {
                     localStorage.removeItem('tokenCIMR');
                     setIsAuthenticated(false);
@@ -40,14 +42,14 @@ const AutoLoginRoute = ({ children }) => {
         };
 
         autoLogin();
-    }, []);
+    }, [navigate]);
 
     if (isLoading) {
-        return <div>Loading...</div>; 
+        return <div>Loading...</div>;
     }
 
     if (isAuthenticated) {
-        return <Navigate to="/rendezvous" replace />;
+        return null;
     }
 
     return children;

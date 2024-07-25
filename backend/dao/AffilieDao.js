@@ -18,7 +18,8 @@ async function findByNumeroIdentite(NumeroIdentite) {
                 affilieData.type_identite,
                 affilieData.numero_identite,
                 affilieData.numero_matricule,
-                affilieData.id_affilie
+                affilieData.id_affilie,
+                affilieData.statusDocuments
             );
         }
         return null;

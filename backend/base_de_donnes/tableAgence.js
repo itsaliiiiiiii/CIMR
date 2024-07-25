@@ -1,6 +1,6 @@
 const { connection } = require('./db');
 
-async function createRendezVousTable() {
+async function agenceTable() {
     const createTableQuery = `
     CREATE TABLE IF NOT EXISTS agence (
         agence VARCHAR(50) PRIMARY KEY
@@ -42,7 +42,7 @@ async function insertAgences() {
 }
 
 async function main() {
-    await createRendezVousTable();
+    await agenceTable();
     await insertAgences();
 }
 

@@ -1,9 +1,10 @@
 import React, { useState, useEffect } from "react";
-import { useNavigate } from "react-router-dom";
+import { useNavigate , useLocation } from "react-router-dom";
 import axios from "axios";
 import AfficherRendezVousPage from "./AfficherRendezVousPage"
 import AjouterRendezVousPage from "./AjouterRendezVousPage";
 import { Routes, Route } from "react-router-dom";
+import Notification from "../Nofitication";
 
 const API_BASE_URL = "http://localhost:4000/cimr";
 
@@ -12,6 +13,14 @@ export default function RendezVous() {
     const [userData, setUserData] = useState(null);
     const [loading, setLoading] = useState(true);
     const [error, setError] = useState(null);
+    const location = useLocation();
+    const [notificationMessage, setNotificationMessage] = useState('');
+
+    useEffect(() => {
+        if (location.state && location.state.notification) {
+            setNotificationMessage(location.state.notification);
+        }
+    }, [location]);
 
     useEffect(() => {
         fetchData();
@@ -59,6 +68,8 @@ export default function RendezVous() {
 
     return (
         <div className="container py-5">
+            {notificationMessage && <Notification message={notificationMessage} />}
+
             <div className="row">
                 <div className="col-lg-4 mb-4">
                     <div className="card shadow-sm">
@@ -73,6 +84,7 @@ export default function RendezVous() {
                                     <li className="mb-2"><strong>Numéro d'identité:</strong> {userData.numero_identite}</li>
                                     <li className="mb-2"><strong>Pays:</strong> {userData.pays}</li>
                                     <li className="mb-2"><strong>Ville:</strong> {userData.ville}</li>
+                                    <li className="mb-2"><strong>Status Documents:</strong> {userData.statusDocuments}</li>
                                 </ul>
                             )}
                         </div>
@@ -86,7 +98,6 @@ export default function RendezVous() {
                         </div>
                     </div>
                 </div>
-
                 <div className="col-lg-8">
                     <Routes>
                         <Route path="/" element={<AfficherRendezVousPage />} />
@@ -94,7 +105,6 @@ export default function RendezVous() {
                     </Routes>
                 </div>
             </div>
-
             <a className="btn btn-secondary position-fixed bottom-0 end-0 m-3" href="#top">
                 <i className="fas fa-angle-up"></i>
             </a>

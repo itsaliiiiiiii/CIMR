@@ -4,8 +4,7 @@ const jwt = require('jsonwebtoken');
 const bcrypt = require('bcrypt');
 
 const { RendezVous } = require('./pojo/RendezVous');
-const { fetchCountries, fetchCities } = require('./dao/CountryCitiesDao');
-const { fetchAgence } = require('./dao/AgenceDao');
+const { fetchAgence, fetchService, fetchCountries, fetchCities } = require('./dao/AgenceDao');
 const affilieGestion = require('./gestion/AffilieGestion');
 const rendezVousGestion = require('./gestion/RendezVousGestion');
 
@@ -115,18 +114,7 @@ router.get('/affilie', verifyToken, async (req, res) => {
     }
 });
 
-router.get('/agence', async (req, res) => {
-    try {
-        const agence = await fetchAgence();
-        if (agence) {
-            res.json(agence);
-        } else {
-            res.status(404).json({ message: 'agences non trouvé' });
-        }
-    } catch (error) {
-        res.status(500).json({ message: 'Erreur lors de la recherche des agence', error: error.message });
-    }
-});
+
 
 // Route pour créer un rendez-vous
 router.post('/rendez-vous', verifyToken, async (req, res) => {
@@ -234,6 +222,32 @@ router.get('/cities/:countryId', async (req, res) => {
     } catch (error) {
         console.error('Error fetching cities:', error);
         res.status(500).json({ message: 'Internal server error' });
+    }
+});
+
+router.get('/agence', async (req, res) => {
+    try {
+        const agence = await fetchAgence();
+        if (agence) {
+            res.json(agence);
+        } else {
+            res.status(404).json({ message: 'agences non trouvé' });
+        }
+    } catch (error) {
+        res.status(500).json({ message: 'Erreur lors de la recherche des agence', error: error.message });
+    }
+});
+
+router.get('/service', async (req, res) => {
+    try {
+        const service = await fetchService();
+        if (service) {
+            res.json(service);
+        } else {
+            res.status(404).json({ message: 'services non trouvé' });
+        }
+    } catch (error) {
+        res.status(500).json({ message: 'Erreur lors de la recherche des service', error: error.message });
     }
 });
 

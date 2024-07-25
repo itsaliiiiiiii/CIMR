@@ -12,26 +12,20 @@ const dbConfig = {
 async function createTables(connection) {
     const createCountriesTable = `
     CREATE TABLE IF NOT EXISTS countries (
-      country_id INT PRIMARY KEY AUTO_INCREMENT,
-      country_name VARCHAR(100) NOT NULL,
-      country_code CHAR(2) NOT NULL UNIQUE
+    country_id INT PRIMARY KEY AUTO_INCREMENT,
+    country_name VARCHAR(100)  NOT NULL,
+    country_code CHAR(2) NOT NULL UNIQUE
     )
-  `;
+`;
 
     const createCitiesTable = `
     CREATE TABLE IF NOT EXISTS cities (
-      city_id INT PRIMARY KEY AUTO_INCREMENT,
-      city_name VARCHAR(100) NOT NULL,
-      country_id INT,
-      FOREIGN KEY (country_id) REFERENCES countries(country_id)
+    city_id INT PRIMARY KEY AUTO_INCREMENT,
+    city_name VARCHAR(100) NOT NULL,
+    country_id INT,
+    FOREIGN KEY (country_id) REFERENCES countries(country_id)
     )
-  `;
-
-    const createIndexes = `
-    CREATE INDEX IF NOT EXISTS idx_country_name ON countries(country_name);
-    CREATE INDEX IF NOT EXISTS idx_city_name ON cities(city_name);
-    CREATE INDEX IF NOT EXISTS idx_city_country ON cities(country_id)
-  `;
+`;
 
     await connection.execute(createCountriesTable);
     await connection.execute(createCitiesTable);
