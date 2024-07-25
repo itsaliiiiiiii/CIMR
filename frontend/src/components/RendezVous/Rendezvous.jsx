@@ -1,5 +1,5 @@
 import React, { useState, useEffect } from "react";
-import { useNavigate , useLocation } from "react-router-dom";
+import { useNavigate , useLocation, Navigate } from "react-router-dom";
 import axios from "axios";
 import AfficherRendezVousPage from "./AfficherRendezVousPage"
 import AjouterRendezVousPage from "./AjouterRendezVousPage";
@@ -102,6 +102,8 @@ export default function RendezVous() {
                     <Routes>
                         <Route path="/" element={<AfficherRendezVousPage />} />
                         <Route path="/reservation" element={<AjouterRendezVousPage />} />
+                        <Route path="/modification" element={<AjouterRendezVousPage />} />
+                        <Route path="/*" element={<Navigate to="/rendezvous" />} />
                     </Routes>
                 </div>
             </div>

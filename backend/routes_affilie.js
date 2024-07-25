@@ -27,8 +27,6 @@ const verifyToken = async (req, res, next) => {
         req.numero_matricule = decoded.numero_matricule;
         req.id_affilie = decoded.id_affilie;
 
-        console.log(req.numero_matricule, req.id_affilie, req.numero_identite);
-
         const affilie = await affilieGestion.fetchAffilie(req.numero_identite, true);
         if (!affilie) {
             return res.status(404).json({ message: 'Affilié non trouvé. Impossible de créer un rendez-vous.' });
@@ -38,7 +36,6 @@ const verifyToken = async (req, res, next) => {
         if (!isMatriculeValid) {
             return res.status(401).json({ message: 'Numéro de matricule invalide' });
         }
-
         next();
     } catch (error) {
         if (error instanceof jwt.JsonWebTokenError) {
@@ -129,7 +126,7 @@ router.post('/rendez-vous', verifyToken, async (req, res) => {
 
         await rendezVousGestion.creerRendezVous(newRendezVous);
 
-        return res.status(201).json({ message: 'Rendez-vous créé avec succès', isValid :true});
+        return res.status(201).json({ message: 'Rendez-vous créé avec succès', isValid: true });
     } catch (error) {
         res.status(500).json({ message: 'Erreur lors de la création du rendez-vous', error: error.message });
     }
@@ -138,61 +135,19 @@ router.post('/rendez-vous', verifyToken, async (req, res) => {
 // Route pour obtenir les rendez-vous de l'affilié
 router.get('/rendez-vous', verifyToken, async (req, res) => {
     try {
-        const rendezVous = await rendezVousGestion.obtenirRendezVousPourAffilie(req.id_affilie);
-        console.log("final :", rendezVous);
-        res.json({ isValid: true, rendezVous: rendezVous });
+        const rendezVous = await rendezVousGestion.obtenirRendezVousPourAffilie(req.id_affilie); res.json({ isValid: true, rendezVous: rendezVous });
     } catch (error) {
         res.status(500).json({ message: 'Erreur lors de la recherche des rendez-vous', error: error.message });
     }
 });
 
-// Route pour mettre à jour un rendez-vous
-router.put('/rendez-vous/:id', verifyToken, async (req, res) => {
+router.put('/rendez-vous/:appointmentId/annuler', verifyToken, async (req, res) => {
+    console.log(req.params.appointmentId, req.id_affilie);
     try {
-        const rendezVous = await rendezVousGestion.obtenirRendezVous(req.params.id);
-        if (!rendezVous || rendezVous.numero_matricule !== req.userId) {
-            return res.status(403).json({ message: 'Accès non autorisé à ce rendez-vous' });
-        }
-
-        const updatedRendezVous = new RendezVous(
-            req.params.id,
-            req.userId,
-            req.body.agence,
-            req.body.heure_rdv,
-            req.body.date_rdv,
-            'poser les documents d\'inscription'
-        );
-        const updated = await rendezVousGestion.mettreAJourRendezVous(updatedRendezVous);
-        if (updated) {
-            res.json({ message: 'Rendez-vous mis à jour avec succès' });
-        } else {
-            res.status(404).json({ message: 'Rendez-vous non trouvé' });
-        }
+        const rendezVous = await rendezVousGestion.annulerRendezVous(req.params.appointmentId, req.id_affilie);
+        res.json({ rendezVous: rendezVous ,isValid: true });
     } catch (error) {
-        if (error.message === 'Impossible de modifier un rendez-vous passé') {
-            res.status(400).json({ message: error.message });
-        } else {
-            res.status(500).json({ message: 'Erreur lors de la mise à jour du rendez-vous', error: error.message });
-        }
-    }
-});
-
-// Route pour supprimer un rendez-vous
-router.delete('/rendez-vous/:id', verifyToken, async (req, res) => {
-    try {
-        const rendezVous = await rendezVousGestion.obtenirRendezVous(req.params.id);
-        if (!rendezVous || rendezVous.numero_matricule !== req.userId) {
-            return res.status(403).json({ message: 'Accès non autorisé à ce rendez-vous' });
-        }
-
-        await rendezVousGestion.supprimerRendezVous(req.params.id);
-        res.json({ message: 'Rendez-vous supprimé avec succès' });
-    } catch (error) {
-        if (error.message === 'Impossible de supprimer un rendez-vous passé') {
-            res.status(400).json({ message: error.message });
-        } else {
-            res.status(500).json({ message: 'Erreur lors de la suppression du rendez-vous', error: error.message });
-        }
+        res.status(500).json({ message: 'Erreur lors de l\'annulation du rendez-vous', error: error.message });
     }
 });
 

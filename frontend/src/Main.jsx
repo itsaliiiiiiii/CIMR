@@ -18,7 +18,7 @@ function Main() {
     <Router>
       <NavBar />
       <Routes>
-        <Route path="/" element={
+        <Route path="/*" element={
           <Navigate to="/login" />
         } />
         <Route path="/login" element={

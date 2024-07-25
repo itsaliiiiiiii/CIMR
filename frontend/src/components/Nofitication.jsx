@@ -1,4 +1,4 @@
-import React, { useState } from "react";
+import React, { useEffect, useState } from "react";
 
 function Notification({ message }) {
     const [isVisible, setIsVisible] = useState(true);
@@ -6,6 +6,13 @@ function Notification({ message }) {
     const handleClose = () => {
         setIsVisible(false);
     };
+    useEffect(() => {
+        const timer = setTimeout(() => {
+            setIsVisible(false);
+        }, 5000);
+        return () => clearTimeout(timer);
+    }
+    );
 
     return (
         isVisible && (

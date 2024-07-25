@@ -44,6 +44,35 @@ export default function AfficherRendezVousPage() {
     if (loading) return <div>Chargement...</div>;
     if (error) return <div>{error}</div>;
 
+
+
+    const handleAnnuleButton = (appointmentId) => async () => {
+        const token = localStorage.getItem('tokenCIMR');
+        if (!token) {
+            navigate('/login');
+            return;
+        }
+        try {
+            const response = await axios.put(`${API_BASE_URL}/rendez-vous/${appointmentId}/annuler`,{}, {
+                headers: { 'Authorization': `Bearer ${token}` }
+            });
+
+            if (response.data.isValid) {
+                setAppointments(appointments.map((appointment) => {
+                    if (appointment.numero_rdv === appointmentId) {
+                        return { ...appointment, etat_rdv: 'Annulé' };
+                    }
+                    return appointment;
+                }));
+            } else {
+                throw new Error('Invalid data received from server');
+            }
+        } catch (error) {
+            console.error('Error fetching data:', error);
+            setError('Une erreur est survenue lors de l\'annulation du rendez-vous.');
+        }
+    }
+
     const getBadgeClass = (status) => {
         switch (status) {
             case 'Prévu':
@@ -78,7 +107,7 @@ export default function AfficherRendezVousPage() {
                         </span>
                     </>)
             default:
-                return  (<span className={`badge bg-secondary`}>
+                return (<span className={`badge bg-secondary`}>
                     {"Erreur"}
                 </span>);
         }
@@ -109,13 +138,13 @@ export default function AfficherRendezVousPage() {
                                         {getBadgeClass(appointment.etat_rdv)}
                                     </p>
                                 </div>
-                                {appointment.etat_rdv == 'Prévu' && (
+                                {appointment.etat_rdv === 'Prévu' && (
                                     <div className="card-footer bg-transparent border-0">
                                         <div className="d-flex justify-content-between">
-                                            <button className="btn btn-sm btn-outline-primary" onClick={() => console.log(`Modifier ${appointment.id}`)}>
+                                            <button className="btn btn-sm btn-outline-primary" onClick={() => console.log(`Modifier ${appointment.numero_rdv}`)}>
                                                 Modifier
                                             </button>
-                                            <button className="btn btn-sm btn-outline-danger" onClick={() => console.log(`Annuler ${appointment.id}`)}>
+                                            <button className="btn btn-sm btn-outline-danger" onClick={handleAnnuleButton(appointment.numero_rdv)}>
                                                 Annulé le rendez-vous
                                             </button>
                                         </div>
