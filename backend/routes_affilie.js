@@ -5,23 +5,49 @@ const bcrypt = require('bcrypt');
 
 const { RendezVous } = require('./pojo/RendezVous');
 const { fetchCountries, fetchCities } = require('./dao/CountryCitiesDao');
+const { fetchAgence } = require('./dao/AgenceDao');
 const affilieGestion = require('./gestion/AffilieGestion');
 const rendezVousGestion = require('./gestion/RendezVousGestion');
 
-const verifyToken = (req, res, next) => {
-    const authHeader = req.headers['authorization'];
-    if (!authHeader) return res.status(403).json({ message: 'Aucun token fourni' });
 
-    const token = authHeader.split(' ')[1];
-    if (!token) return res.status(403).json({ message: 'Format de token invalide' });
+const verifyToken = async (req, res, next) => {
+    try {
+        const authHeader = req.headers['authorization'];
+        if (!authHeader) {
+            return res.status(401).json({ message: 'Aucun token fourni' });
+        }
 
-    jwt.verify(token, process.env.JWT_SECRET, (err, decoded) => {
-        if (err) return res.status(401).json({ message: 'Token non valide' });
+        const token = authHeader.split(' ')[1];
+        if (!token) {
+            return res.status(401).json({ message: 'Format de token invalide' });
+        }
+
+        const decoded = jwt.verify(token, process.env.JWT_SECRET);
+
         req.numero_identite = decoded.numero_identite;
         req.numero_matricule = decoded.numero_matricule;
         req.id_affilie = decoded.id_affilie;
+
+        console.log(req.numero_matricule, req.id_affilie, req.numero_identite);
+
+        const affilie = await affilieGestion.fetchAffilie(req.numero_identite, true);
+        if (!affilie) {
+            return res.status(404).json({ message: 'Affilié non trouvé. Impossible de créer un rendez-vous.' });
+        }
+
+        const isMatriculeValid = await bcrypt.compare(req.numero_matricule, affilie.numero_matricule);
+        if (!isMatriculeValid) {
+            return res.status(401).json({ message: 'Numéro de matricule invalide' });
+        }
+
         next();
-    });
+    } catch (error) {
+        if (error instanceof jwt.JsonWebTokenError) {
+            return res.status(401).json({ message: 'Token non valide' });
+        }
+        console.error('Erreur dans la vérification du token:', error);
+        res.status(500).json({ message: 'Erreur interne du serveur' });
+    }
 };
 
 router.get('/verify-token', verifyToken, (req, res) => {
@@ -76,13 +102,11 @@ router.post('/auth', async (req, res) => {
     }
 });
 
-
-// Route pour obtenir les informations de l'affilié
 router.get('/affilie', verifyToken, async (req, res) => {
     try {
-        const affilie = await affilieGestion.obtenirAffilie(req.userId);
+        const affilie = await affilieGestion.fetchAffilie(req.numero_identite, false);
         if (affilie) {
-            res.json(affilie);
+            res.json({ isValid: true, affilie: affilie });
         } else {
             res.status(404).json({ message: 'Affilié non trouvé' });
         }
@@ -91,17 +115,23 @@ router.get('/affilie', verifyToken, async (req, res) => {
     }
 });
 
+router.get('/agence', async (req, res) => {
+    try {
+        const agence = await fetchAgence();
+        if (agence) {
+            res.json(agence);
+        } else {
+            res.status(404).json({ message: 'agences non trouvé' });
+        }
+    } catch (error) {
+        res.status(500).json({ message: 'Erreur lors de la recherche des agence', error: error.message });
+    }
+});
+
 // Route pour créer un rendez-vous
 router.post('/rendez-vous', verifyToken, async (req, res) => {
     try {
-        const decoded = bcrypt.compare(req.body.numero_matricule, req.numero_matricule);
-
-        if (!decoded || req.numero_identite != req.body.numero_identite) {
-            return res.status(404).json({ message: 'Affilié non trouvé. Impossible de créer un rendez-vous.' });
-        }
-
         const newRendezVous = {
-            numero_matricule: req.body.numero_matricule,
             id_affilie: req.id_affilie,
             agence: req.body.agence,
             date_rdv: req.body.date_rdv,
@@ -109,9 +139,9 @@ router.post('/rendez-vous', verifyToken, async (req, res) => {
             type_service: req.body.type_service || "poser les documents d'inscription"
         };
 
-        const rendezVousId = await rendezVousGestion.creerRendezVous(newRendezVous);
+        await rendezVousGestion.creerRendezVous(newRendezVous);
 
-        return res.status(201).json({ message: 'Rendez-vous créé avec succès' });
+        return res.status(201).json({ message: 'Rendez-vous créé avec succès', isValid :true});
     } catch (error) {
         res.status(500).json({ message: 'Erreur lors de la création du rendez-vous', error: error.message });
     }
@@ -120,8 +150,9 @@ router.post('/rendez-vous', verifyToken, async (req, res) => {
 // Route pour obtenir les rendez-vous de l'affilié
 router.get('/rendez-vous', verifyToken, async (req, res) => {
     try {
-        const rendezVous = await rendezVousGestion.obtenirRendezVousPourAffilie(req.numero_matricule);
-        res.json(rendezVous);
+        const rendezVous = await rendezVousGestion.obtenirRendezVousPourAffilie(req.id_affilie);
+        console.log("final :", rendezVous);
+        res.json({ isValid: true, rendezVous: rendezVous });
     } catch (error) {
         res.status(500).json({ message: 'Erreur lors de la recherche des rendez-vous', error: error.message });
     }

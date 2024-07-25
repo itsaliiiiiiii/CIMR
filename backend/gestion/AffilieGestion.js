@@ -1,11 +1,28 @@
-const { findByNumeroIdentite, creerAffilie: creerAffilieDansBD, findByNumeroMatricule, findByEmail, findByTelephone } = require('../dao/AffilieDao');
+const { findByNumeroIdentite, creerAffilie: creerAffilieDansBD, findByNumeroMatricule, findByEmail, findByTelephone, findById } = require('../dao/AffilieDao');
 const bcrypt = require('bcrypt');
 
-async function obtenirAffilie(numeroMatricule) {
+async function obtenirAffilie(matricule) {
     try {
-        const affilie = await findByNumeroMatricule(numeroMatricule);
+        const affilie = await findByNumeroMatricule(matricule);
         if (!affilie) {
             throw new Error('Affilié non trouvé');
+        }
+        return affilie;
+    } catch (error) {
+        console.error('Erreur lors de la recherche de l\'affilié:', error);
+        throw error;
+    }
+}
+
+async function fetchAffilie(id_affilie, withMatricule) {
+    try {
+        const affilie = await findByNumeroIdentite(id_affilie);
+        if (!affilie) {
+            throw new Error('Affilié non trouvé');
+        }
+
+        if (!withMatricule) {
+            affilie.numero_matricule = null;
         }
         return affilie;
     } catch (error) {
@@ -94,11 +111,11 @@ async function creerAffilie(nom, prenom, email, date_naissance, numero_telephone
 
 async function authentifierAffilie(numero_matricule, numero_telephone, numero_identite) {
     try {
-        const affilie = await findByNumeroIdentite(numero_identite);
+        const affilie = await findByNumeroIdentite(numero_identite, false);
         if (!affilie) {
             throw new Error('Affilié non trouvé');
         }
-        
+
         console.log(affilie);
 
         const isMatriculeValid = await bcrypt.compare(numero_matricule, affilie.numero_matricule);
@@ -117,4 +134,4 @@ async function authentifierAffilie(numero_matricule, numero_telephone, numero_id
     }
 }
 
-module.exports = { obtenirAffilie, verifierIdentite, creerAffilie, authentifierAffilie, verifierAffilieExiste };
+module.exports = { obtenirAffilie, verifierIdentite, creerAffilie, authentifierAffilie, verifierAffilieExiste, fetchAffilie };

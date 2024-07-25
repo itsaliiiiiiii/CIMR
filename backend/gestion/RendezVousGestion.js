@@ -43,10 +43,9 @@ class RendezVousGestion {
         }
     }
 
-    async obtenirRendezVousPourAffilie(numero_matricule) {
-        console.log('Début de obtenirRendezVousPourAffilie avec numéro de matricule:', numero_matricule);
+    async obtenirRendezVousPourAffilie(id_affilie) {
         try {
-            const rendezVous = await rendezVousDao.findAllByNumeroMatricule(numero_matricule);
+            const rendezVous = await rendezVousDao.findAllById(id_affilie);
             console.log('Rendez-vous obtenus pour l\'affilié:', rendezVous);
             return rendezVous;
         } catch (error) {

@@ -1,7 +1,6 @@
 class RendezVous {
     constructor(id, numero_matricule, agence, date_rdv, heure_rdv, type_service,id_affilie) {
         this.id = id;
-        this.numero_matricule = numero_matricule;
         this.agence = agence;
         this.id_affilie = id_affilie;
         this.date_rdv = date_rdv;

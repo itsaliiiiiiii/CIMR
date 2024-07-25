@@ -2,17 +2,7 @@ import React, { useState, useEffect } from 'react';
 import { useNavigate } from 'react-router-dom';
 import axios from 'axios';
 
-const agences = [
-    "Agence Belvédère Casablanca",
-    "Agence Centrale Casablanca",
-    "Agence Marrakech",
-    "Agence Rabat",
-    "Agence Meknes",
-    "Agence Fes",
-    "Agence Tanger",
-    "Agence Agadir",
-    "Agence Oujda",
-];
+
 
 const API_BASE_URL = 'http://localhost:4000/cimr';
 
@@ -25,6 +15,7 @@ export default function Information3() {
     const [errors, setErrors] = useState({});
     const [isLoading, setIsLoading] = useState(false);
     const [affilieInfo, setAffilieInfo] = useState(null);
+    const [agences, setAgences] = useState([]);
 
     useEffect(() => {
         const storedAffilieInfo = localStorage.getItem('affilieInfo');
@@ -36,6 +27,27 @@ export default function Information3() {
                 affilieInfo: "Information d'affilié non trouvée. Veuillez vous inscrire d'abord."
             }));
         }
+
+        const fetchAgences = async () => {
+            try {
+                const response = await axios.get(`${API_BASE_URL}/agence`);
+                if (response.data && Array.isArray(response.data)) {
+                    setAgences(response.data);
+                } else {
+                    setErrors(prevErrors => ({
+                        ...prevErrors,
+                        agence: 'Aucune agence trouvée'
+                    }));
+                }
+            } catch (error) {
+                setErrors(prevErrors => ({
+                    ...prevErrors,
+                    agence: 'Erreur lors de la récupération des agences'
+                }));
+            }
+        }
+
+        fetchAgences();
     }, []);
 
     const handleChange = (e) => {
@@ -110,7 +122,7 @@ export default function Information3() {
                 type_service: "poser les documents d'inscription"
             };
 
-            const response = await axios.post(`${API_BASE_URL}/rendez-vous`, rendezVousData, {
+            await axios.post(`${API_BASE_URL}/rendez-vous`, rendezVousData, {
                 headers: {
                     'Authorization': `Bearer ${token}`
                 }
@@ -177,9 +189,9 @@ export default function Information3() {
                                                 onChange={handleChange}
                                             >
                                                 <option value="">Sélectionnez une agence</option>
-                                                {agences.map((agence, index) => (
-                                                    <option key={index} value={agence}>
-                                                        {agence}
+                                                {agences.map((agenceObj, index) => (
+                                                    <option key={index} value={agenceObj.agence}>
+                                                        {agenceObj.agence}
                                                     </option>
                                                 ))}
                                             </select>

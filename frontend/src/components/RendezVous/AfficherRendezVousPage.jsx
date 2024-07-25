@@ -1,30 +1,70 @@
-import React from "react";
+import React, { useState, useEffect } from "react";
 import { useNavigate } from "react-router-dom";
+import axios from "axios";
+
+const API_BASE_URL = "http://localhost:4000/cimr";
+
 export default function AfficherRendezVousPage() {
     const navigate = useNavigate();
-    const handleDeconection = () => {
-        navigate('/login');
-        localStorage.removeItem('tokenCIMR');
-    }
-    return (
-        <div className="container py-4">
-            <h1 className="text-center mb-5">Mes Rendez-vous</h1>
+    const [appointments, setAppointments] = useState([]);
+    const [loading, setLoading] = useState(true);
+    const [error, setError] = useState(null);
 
-            <div className="row gy-4">
-                {[1, 2, 3].map((appointmentId) => (
-                    <div key={appointmentId} className="col-md-4">
-                        <div className="card">
+    useEffect(() => {
+        fetchData();
+    }, []);
+
+    const fetchData = async () => {
+        const token = localStorage.getItem('tokenCIMR');
+        if (!token) {
+            navigate('/login');
+            return;
+        }
+        try {
+            setLoading(true);
+            const appointmentsResponse = await
+                axios.get(`${API_BASE_URL}/rendez-vous`, {
+                    headers: { 'Authorization': `Bearer ${token}` }
+                })
+
+            if (appointmentsResponse.data.isValid) {
+                setAppointments(appointmentsResponse.data.rendezVous || []);
+            } else {
+                throw new Error('Invalid data received from server');
+            }
+        } catch (error) {
+            console.error('Error fetching data:', error);
+            setError('Une erreur est survenue lors du chargement des données.');
+            navigate('/login');
+            localStorage.removeItem('tokenCIMR');
+        } finally {
+            setLoading(false);
+        }
+    };
+
+    if (loading) return <div>Chargement...</div>;
+    if (error) return <div>{error}</div>;
+
+    return (
+        <>
+            <h2 className="mb-4">Mes Rendez-vous</h2>
+            <div className="row g-4" id="rendezvous">
+                {appointments.map((appointment) => (
+                    <div key={appointment.numero_rdv} className="col-md-6">
+                        <div className="card h-100 shadow-sm">
                             <div className="card-body">
-                                <h5 className="card-title">Rendez-vous #{appointmentId}</h5>
-                                <p className="card-text">Date: 01/08/2023</p>
-                                <p className="card-text">Heure: 14:00</p>
-                                <p className="card-text">Service: Consultation</p>
+                                <h5 className="card-title">Rendez-vous</h5>
+                                <p className="card-text"><strong>Date:</strong> {appointment.date_rdv}</p>
+                                <p className="card-text"><strong>Heure:</strong> {appointment.heure_rdv}</p>
+                                <p className="card-text"><strong>Service:</strong> {appointment.type_service}</p>
+                            </div>
+                            <div className="card-footer bg-transparent border-0">
                                 <div className="d-flex justify-content-between">
-                                    <button className="btn btn-primary" onClick={() => console.log(`Modifier ${appointmentId}`)}>
+                                    <button className="btn btn-sm btn-outline-primary" onClick={() => console.log(`Modifier ${appointment.id}`)}>
                                         Modifier
                                     </button>
-                                    <button className="btn btn-danger" onClick={() => console.log(`Annuler ${appointmentId}`)}>
-                                        Annuler
+                                    <button className="btn btn-sm btn-outline-danger" onClick={() => console.log(`Annuler ${appointment.id}`)}>
+                                        Supprimer
                                     </button>
                                 </div>
                             </div>
@@ -32,21 +72,7 @@ export default function AfficherRendezVousPage() {
                     </div>
                 ))}
             </div>
+        </>
 
-            <div className="text-center mt-5">
-                <button className="btn btn-success btn-lg" onClick={() => console.log('Nouveau rendez-vous')}>
-                    Prendre un nouveau rendez-vous
-                </button>
-            </div>
-            <div className="text-center mt-5">
-                <button className="btn btn-success btn-lg" onClick={handleDeconection}>
-                    Deconnection
-                </button>
-            </div>
-
-            <a className="btn btn-secondary position-fixed bottom-0 end-0 m-3" href="#top">
-                <i className="fas fa-angle-up"></i>
-            </a>
-        </div>
     );
 }

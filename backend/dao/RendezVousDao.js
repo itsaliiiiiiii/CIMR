@@ -3,11 +3,10 @@ const { connection } = require('../base_de_donnes/db');
 
 class RendezVousDao {
     async create(rendezVous) {
-        const query = 'INSERT INTO rendez_vous (numero_matricule, id_affilie,agence, date_rdv, heure_rdv, type_service) VALUES (?, ?, ?, ?, ?,?)';
+        const query = 'INSERT INTO rendez_vous ( id_affilie,agence, date_rdv, heure_rdv, type_service) VALUES ( ?, ?, ?, ?,?)';
         try {
 
             const [result] = await connection.query(query, [
-                rendezVous.numero_matricule,
                 rendezVous.id_affilie,
                 rendezVous.agence,
                 rendezVous.date_rdv,
@@ -40,10 +39,11 @@ class RendezVousDao {
         }
     }
 
-    async findAllByNumeroMatricule(numero_matricule) {
-        const query = 'SELECT * FROM rendez_vous WHERE numero_matricule = ? ORDER BY date_rdv DESC, heure_rdv DESC';
+    async findAllById(id_affilie) {
+        const query = 'SELECT * FROM rendez_vous WHERE id_affilie = ? ORDER BY date_rdv DESC, heure_rdv DESC';
         try {
-            const [rows] = await connection.query(query, [numero_matricule]);
+            const [rows] = await connection.query(query, [id_affilie]);
+            console.log(rows);
             return rows.map(row => this._createRendezVousFromRow(row));
         } catch (error) {
             console.error('Erreur lors de la recherche des rendez-vous:', error);

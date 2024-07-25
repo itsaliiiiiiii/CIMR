@@ -13,6 +13,8 @@ class Affilie {
         this.numero_matricule = hashedMatricule;
         this.id_affilie = id_affilie;
     }
+    
+    
 }
 
 module.exports = Affilie;

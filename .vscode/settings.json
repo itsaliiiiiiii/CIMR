@@ -1,6 +1,10 @@
 {
   "git.ignoreLimitWarning": true,
   "files.exclude": {
+    "**/.git": true,
+    "**/.svn": true,
+    "**/.hg": true,
+    "**/CVS": true,
     "frontend/node_modules": true,
     "backend/.vscode": true
   }

@@ -8,7 +8,7 @@ import 'bootstrap/dist/js/bootstrap.bundle.min';
 
 import LoginForm from './components/LoginForm';
 import AuthRoute from './components/AuthRoute';
-import AfficherRendezVousPage from './components/RendezVous/AfficherRendezVousPage';
+import Rendezvous from './components/RendezVous/Rendezvous';
 import CreationRendezVousPage from './components/RendezVous/AjouterRendezVousPage';
 import ModificationRendezVousPage from './components/RendezVous/ModifierRendezVousPage';
 import Register from './components/Register/Register';
@@ -31,23 +31,9 @@ function Main() {
           </AutoLoginRoute>
         } />
         <Route
-          path="/rendezvous" element={
+          path="/rendezvous/*" element={
             <AuthRoute>
-              <AfficherRendezVousPage />
-            </AuthRoute>
-          }
-        />
-        <Route
-          path="/reservation" element={
-            <AuthRoute>
-              <CreationRendezVousPage />
-            </AuthRoute>
-          }
-        />
-        <Route
-          path="/modification" element={
-            <AuthRoute>
-              <ModificationRendezVousPage />
+              <Rendezvous />
             </AuthRoute>
           }
         />

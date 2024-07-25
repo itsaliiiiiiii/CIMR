@@ -18,6 +18,7 @@ async function findByNumeroIdentite(NumeroIdentite) {
                 affilieData.type_identite,
                 affilieData.numero_identite,
                 affilieData.numero_matricule,
+                affilieData.id_affilie
             );
         }
         return null;
@@ -102,6 +103,32 @@ async function findByNumeroMatricule(NumeroMatricule) {
         throw error;
     }
 }
+async function findById(id_affilie) {
+    const query = 'SELECT * FROM affilie WHERE id_affilie = ? LIMIT 1';
+    try {
+        const [rows] = await connection.query(query, [id_affilie]);
+        if (rows.length > 0) {
+            const affilieData = rows[0];
+            return new Affilie(
+                affilieData.nom,
+                affilieData.prenom,
+                affilieData.email,
+                affilieData.date_naissance,
+                affilieData.numero_telephone,
+                affilieData.pays,
+                affilieData.ville,
+                affilieData.type_identite,
+                affilieData.numero_identite,
+                affilieData.numero_matricule,
+                affilieData.id_affilie
+            );
+        }
+        return null;
+    } catch (error) {
+        console.error('Erreur lors de la recherche de l\'affilie:', error);
+        throw error;
+    }
+}
 
 async function creerAffilie(nom, prenom, email, date_naissance, numero_telephone,
     pays, ville, type_identite, numero_identite, hashed_matricule) {
@@ -122,4 +149,4 @@ async function creerAffilie(nom, prenom, email, date_naissance, numero_telephone
     }
 }
 
-module.exports = { findByNumeroIdentite, creerAffilie, findByNumeroMatricule, findByEmail, findByTelephone };
+module.exports = { findByNumeroIdentite, creerAffilie, findByNumeroMatricule, findByEmail, findByTelephone, findById };
