@@ -3,7 +3,8 @@ const { connection } = require('./db');
 async function agenceTable() {
     const createTableQuery = `
     CREATE TABLE IF NOT EXISTS agence (
-        agence VARCHAR(50) PRIMARY KEY
+        agence VARCHAR(50) PRIMARY KEY,
+        nombre_employes INT DEFAULT 0
     )
     `;
 
@@ -29,12 +30,13 @@ async function insertAgences() {
     ];
 
     const insertQuery = `
-    INSERT INTO agence (agence) VALUES ?
+    INSERT INTO agence (agence, nombre_employes) VALUES ?
     `;
 
+    const values = agences.map(agence => [agence, 3]);
+
     try {
-        const values = agences.map(agence => [agence]);
-        await connection.query(insertQuery, [values]);
+        await connection.query(insertQuery, [values]); 
         console.log("Agences insérées avec succès.");
     } catch (error) {
         console.error('Erreur lors de l\'insertion des agences :', error);

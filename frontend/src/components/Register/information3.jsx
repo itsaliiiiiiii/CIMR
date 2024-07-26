@@ -10,7 +10,8 @@ export default function Information3() {
     const navigate = useNavigate();
     const [formData, setFormData] = useState({
         date_rdv: '',
-        agence: ''
+        agence: '',
+        heure_rdv: '',
     });
     const [errors, setErrors] = useState({});
     const [isLoading, setIsLoading] = useState(false);
@@ -86,6 +87,10 @@ export default function Information3() {
             newErrors.agence = 'L\'agence est requise';
         }
 
+        if (!formData.heure_rdv) {
+            newErrors.heure_rdv = 'Heure est requise';
+        }
+
         setErrors(newErrors);
         return Object.keys(newErrors).length === 0;
     };
@@ -121,7 +126,7 @@ export default function Information3() {
                 id_affilie: affilieInfo.id_affilie,
                 agence: formData.agence,
                 date_rdv: formData.date_rdv,
-                heure_rdv: null,
+                heure_rdv: formData.heure_rdv,
                 type_service: "POSER LES DOCUMENTS D'INSCRIPTION"
             };
 
@@ -134,14 +139,32 @@ export default function Information3() {
             localStorage.setItem('rendezVousInfo', JSON.stringify(formData));
             navigate('/register/information/rendezvous');
         } catch (error) {
-            console.error('Erreur lors de la création du rendez-vous:', error);
-            setErrors(prevErrors => ({
-                ...prevErrors,
-                submit: error.response?.data?.message || 'Une erreur est survenue lors de la création du rendez-vous'
-            }));
+            if (error.response && error.response.data && error.response.data.message == "full") {
+                setErrors(prevErrors => ({
+                    ...prevErrors,
+                    submit: "Choisir une autre date ou heure de rendez-vous, l'heure est déjà prise."
+                }));
+            } else {
+                console.error('Erreur lors de la création du rendez-vous:', error);
+                setErrors(prevErrors => ({
+                    ...prevErrors,
+                    submit: error.response?.data?.message || 'Une erreur est survenue lors de la création du rendez-vous'
+                }));
+            }
         } finally {
             setIsLoading(false);
         }
+    };
+
+    const generateTimeOptions = () => {
+        const times = [];
+        for (let hour = 8; hour < 16; hour++) {
+            for (let minute = 0; minute < 60; minute += 15) {
+                const timeString = `${String(hour).padStart(2, '0')}:${String(minute).padStart(2, '0')}`;
+                times.push(<option key={timeString} value={timeString}>{timeString}</option>);
+            }
+        }
+        return times;
     };
 
     const getDayOfWeek = (dateString) => {
@@ -182,6 +205,21 @@ export default function Information3() {
                                                 <p>Jour : {getDayOfWeek(formData.date_rdv)}</p>
                                             </div>
                                         )}
+                                        <div className="mb-3">
+                                            <label htmlFor="heure_rdv" className="form-label">Heure du rendez-vous</label>
+                                            <select
+                                                className={`form-select ${errors.heure_rdv ? 'is-invalid' : ''}`}
+                                                id="heure"
+                                                name="heure_rdv"
+                                                value={formData.heure_rdv}
+                                                onChange={handleChange}
+                                            >
+                                                <option value="">Sélectionnez une heure</option>
+                                                {generateTimeOptions()}
+                                            </select>
+                                            {errors.heure_rdv && <div className="invalid-feedback">{errors.heure_rdv}</div>}
+                                        </div>
+
                                         <div className="mb-3">
                                             <label htmlFor="agence" className="form-label">Choisir une agence</label>
                                             <select

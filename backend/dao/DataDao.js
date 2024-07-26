@@ -56,4 +56,25 @@ async function fetchCities(idCountry) {
     }
 }
 
-module.exports = { fetchAgence, fetchService ,fetchCountries, fetchCities };
+async function countEmployesAgence(agence) {
+    const query = 'SELECT nombre_employes FROM agence WHERE agence = ?';
+    try {
+        return await connection.query(query, agence);
+
+    } catch (error) {
+        console.error('erreur count nombre agence', error);
+        throw error;
+    }
+}
+
+async function countRdvHeureDateAgence(agence, date_rdv, heure_rdv){
+    const query = 'SELECT COUNT(*)  AS nombreRendezVous FROM rendez_vous WHERE agence = ? AND date_rdv = ? AND heure_rdv = ?';
+    try {
+        return await connection.query(query, [agence, date_rdv, heure_rdv]);
+    } catch (error) {
+        console.error('erreur count nombre agence', error);
+        throw error;
+    }
+}
+
+module.exports = { fetchAgence, fetchService, fetchCountries, fetchCities, countEmployesAgence, countRdvHeureDateAgence };

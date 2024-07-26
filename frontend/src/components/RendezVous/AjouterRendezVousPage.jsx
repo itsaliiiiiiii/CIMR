@@ -1,6 +1,7 @@
 import React, { useState, useEffect } from 'react';
 import { useNavigate } from 'react-router-dom';
 import axios from 'axios';
+import { jsPDF } from "jspdf";
 
 const API_BASE_URL = "http://localhost:4000/cimr";
 
@@ -11,11 +12,21 @@ export default function AjouterRendezVousPage() {
         heure_rdv: '',
         type_service: '',
         agence: '',
+        nom: '',
+        prenom: '',
+        telephone: '',
+        date_naissance: '',
+        pays: '',
+        ville: '',
+        numero_identite: '',
+        type_identite: ''
     });
     const [agences, setAgences] = useState([]);
     const [service, setServices] = useState([]);
     const [loading, setLoading] = useState(false);
     const [errors, setErrors] = useState({});
+    const [appointmentTaken, setAppointmentTaken] = useState(false);
+
 
     const handleChange = (e) => {
         const { name, value } = e.target;
@@ -40,7 +51,7 @@ export default function AjouterRendezVousPage() {
             } else if (selectedDate.getDay() === 0 || selectedDate.getDay() === 6) {
                 newErrors.date_rdv = 'Les rendez-vous ne sont pas disponibles le weekend';
             }
-            
+
         }
 
         if (!formData.heure_rdv) {
@@ -79,19 +90,66 @@ export default function AjouterRendezVousPage() {
             });
 
             if (response.data.isValid) {
-                navigate('/rendezvous', { state: { notification: 'Rendez-vous ajouté avec succès' } });
+                setAppointmentTaken(true);
+                const response = await
+                    axios.get(`${API_BASE_URL}/affilie`, {
+                        headers: { 'Authorization': `Bearer ${token}` }
+                    })
+                if (response.data.isValid && response.data.affilie) {
+                    setFormData(prevState => ({
+                        ...prevState,
+                        nom: response.data.affilie.nom,
+                        prenom: response.data.affilie.prenom,
+                        telephone: response.data.affilie.telephone,
+                        date_naissance: response.data.affilie.date_naissance,
+                        pays: response.data.affilie.pays,
+                        ville: response.data.affilie.ville,
+                        numero_identite: response.data.affilie.numero_identite,
+                        type_identite: response.data.affilie.type_identite
+                    }));
+
+                } else {
+                    throw new Error('Failed to get affilie');
+                }
             } else {
                 throw new Error('Failed to add appointment');
             }
         } catch (error) {
             console.error('Error adding appointment:', error);
-            setErrors(prevErrors => ({
-                ...prevErrors,
-                submit: 'Une erreur est survenue lors de l\'ajout du rendez-vous. Veuillez réessayer.'
-            }));
+            if (error.response && error.response.data && error.response.data.message == "full") {
+                setErrors(prevErrors => ({
+                    ...prevErrors,
+                    submit: "Choisir une autre date ou heure de rendez-vous, l'heure est déjà prise." 
+                }));
+            }else{
+                setErrors(prevErrors => ({
+                    ...prevErrors,
+                    submit: 'Une erreur est survenue lors de l\'ajout du rendez-vous. Veuillez réessayer.'
+                }));
+            }
+            
         } finally {
             setLoading(false);
         }
+    };
+
+    const downloadAppointmentInfo = () => {
+        const doc = new jsPDF();
+        doc.setFontSize(16);
+        doc.text("Informations de Rendez-vous", 10, 10);
+        doc.setFontSize(12);
+        doc.text(`Nom: ${formData.nom}`, 10, 30);
+        doc.text(`Prenom: ${formData.prenom}`, 10, 40);
+        doc.text(`Telephone: ${formData.telephone}`, 10, 50);
+        doc.text(`Pays: ${formData.pays}`, 10, 60);
+        doc.text(`Ville: ${formData.ville}`, 10, 70);
+        doc.text(`Numero d'identite: ${formData.numero_identite}`, 10, 80);
+        doc.text(`Type d'identite: ${formData.type_identite}`, 10, 90);
+        doc.text(`Date de rendez-vous: ${formData.date_rdv}`, 10, 100);
+        doc.text(`Heure de rendez-vous: ${formData.heure_rdv}`, 10, 110);
+        doc.text(`Service: ${formData.type_service}`, 10, 120);
+        doc.text(`Agence: ${formData.agence}`, 10, 130);
+        doc.save("informations_rendez_vous.pdf");
     };
 
     useEffect(() => {
@@ -145,11 +203,6 @@ export default function AjouterRendezVousPage() {
             }
         }
         return times;
-    };
-
-    const isWeekend = (date) => {
-        const d = new Date(date);
-        return d.getDay() === 0 || d.getDay() === 6;
     };
 
     return (
@@ -227,14 +280,39 @@ export default function AjouterRendezVousPage() {
                                 </div>
 
                                 <div className="d-grid gap-2">
-                                    <button type="submit" className="btn btn-primary" disabled={loading}>
+                                    <button
+                                        type="submit"
+                                        className="btn btn-primary"
+                                        disabled={loading || appointmentTaken}
+                                    >
                                         {loading ? 'Ajout en cours...' : 'Ajouter le rendez-vous'}
                                     </button>
-                                    <button type="button" className="btn btn-outline-secondary" onClick={() => navigate('/rendezvous')}>
-                                        Annuler
-                                    </button>
+
                                 </div>
                             </form>
+                        </div>
+                    </div>
+                </div>
+                <div className="col-md-8 my-2">
+                    <div className="card shadow">
+                        <div className="card-body">
+                            <div className="d-grid gap-2">
+                                <button
+                                    type="button"
+                                    className="btn btn-primary"
+                                    onClick={downloadAppointmentInfo}
+                                    disabled={!appointmentTaken}
+                                >
+                                    Telecharger rendez-vous
+                                </button>
+                                <button
+                                    type="button"
+                                    className="btn btn-outline-secondary"
+                                    onClick={() => navigate('/rendezvous')}
+                                >
+                                    Annuler
+                                </button>
+                            </div>
                         </div>
                     </div>
                 </div>

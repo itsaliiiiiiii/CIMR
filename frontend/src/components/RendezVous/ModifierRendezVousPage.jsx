@@ -1,6 +1,8 @@
 import React, { useState, useEffect } from 'react';
 import { useNavigate, useParams } from 'react-router-dom';
 import axios from 'axios';
+import { jsPDF } from "jspdf";
+import { parseISO, format, isWeekend, startOfToday, isBefore } from 'date-fns';
 
 const API_BASE_URL = "http://localhost:4000/cimr";
 
@@ -12,13 +14,22 @@ export default function ModifierRendezVousPage() {
         heure_rdv: '',
         type_service: '',
         agence: '',
-        etat_rdv: ''
+        etat_rdv: '',
+        nom: '',
+        prenom: '',
+        telephone: '',
+        date_naissance: '',
+        pays: '',
+        ville: '',
+        numero_identite: '',
+        type_identite: ''
     });
 
     const [agences, setAgences] = useState([]);
     const [services, setServices] = useState([]);
     const [loading, setLoading] = useState(false);
     const [errors, setErrors] = useState({});
+    const [appointmentModified, setAppointmentModified] = useState(false);
 
     useEffect(() => {
         const fetchAppointmentData = async () => {
@@ -35,15 +46,32 @@ export default function ModifierRendezVousPage() {
                 });
 
                 if (response.data) {
-                    const rendezVous  = response.data.rendezVous;
-                    console.log(rendezVous);
+                    const rendezVous = response.data.rendezVous;
+                    const parsedDate = parseISO(rendezVous.date_rdv);
                     setFormData({
                         ...rendezVous,
-                        date_rdv: rendezVous.date_rdv.split('T')[0], 
-                        heure_rdv: rendezVous.heure_rdv.slice(0, 5), 
-
+                        date_rdv: format(parsedDate, 'yyyy-MM-dd'),
+                        heure_rdv: rendezVous.heure_rdv.slice(0, 5),
                     });
-                    console.log(formData);
+
+                    // Fetch affilie data
+                    const affilieResponse = await axios.get(`${API_BASE_URL}/affilie`, {
+                        headers: { 'Authorization': `Bearer ${token}` }
+                    });
+
+                    if (affilieResponse.data.isValid && affilieResponse.data.affilie) {
+                        setFormData(prevState => ({
+                            ...prevState,
+                            nom: affilieResponse.data.affilie.nom,
+                            prenom: affilieResponse.data.affilie.prenom,
+                            telephone: affilieResponse.data.affilie.telephone,
+                            date_naissance: affilieResponse.data.affilie.date_naissance,
+                            pays: affilieResponse.data.affilie.pays,
+                            ville: affilieResponse.data.affilie.ville,
+                            numero_identite: affilieResponse.data.affilie.numero_identite,
+                            type_identite: affilieResponse.data.affilie.type_identite
+                        }));
+                    }
                 } else {
                     throw new Error('Failed to fetch appointment data');
                 }
@@ -110,16 +138,15 @@ export default function ModifierRendezVousPage() {
 
     const validateForm = () => {
         const newErrors = {};
-        const today = new Date();
-        today.setHours(0, 0, 0, 0);
+        const today = startOfToday();
 
         if (!formData.date_rdv) {
             newErrors.date_rdv = 'La date est requise';
         } else {
-            const selectedDate = new Date(formData.date_rdv);
-            if (selectedDate < today) {
+            const selectedDate = parseISO(formData.date_rdv);
+            if (isBefore(selectedDate, today)) {
                 newErrors.date_rdv = 'La date doit être dans le futur';
-            } else if (selectedDate.getDay() === 0 || selectedDate.getDay() === 6) {
+            } else if (isWeekend(selectedDate)) {
                 newErrors.date_rdv = 'Les rendez-vous ne sont pas disponibles le weekend';
             }
         }
@@ -153,26 +180,57 @@ export default function ModifierRendezVousPage() {
                 throw new Error('No authentication token found');
             }
 
-            const response = await axios.put(`${API_BASE_URL}/rendez-vous/${id}/modifier`, formData, {
+            const submissionData = {
+                ...formData,
+                date_rdv: format(parseISO(formData.date_rdv), "yyyy-MM-dd'T'HH:mm:ss.SSSxxx")
+            };
+
+            const response = await axios.put(`${API_BASE_URL}/rendez-vous/${id}/modifier`, submissionData, {
                 headers: {
                     'Authorization': `Bearer ${token}`
                 }
             });
 
             if (response.data.isValid) {
-                navigate('/rendezvous', { state: { notification: 'Rendez-vous modifié avec succès' } });
+                setAppointmentModified(true);
             } else {
                 throw new Error('Failed to update appointment');
             }
         } catch (error) {
             console.error('Error updating appointment:', error);
-            setErrors(prevErrors => ({
-                ...prevErrors,
-                submit: 'Une erreur est survenue lors de la modification du rendez-vous. Veuillez réessayer.'
-            }));
+            if (error.response && error.response.data && error.response.data.message == "full") {
+                setErrors(prevErrors => ({
+                    ...prevErrors,
+                    submit: "Choisir une autre date ou heure de rendez-vous, l'heure est déjà prise."
+                }));
+            } else {
+                setErrors(prevErrors => ({
+                    ...prevErrors,
+                    submit: 'Une erreur est survenue lors de la modification du rendez-vous. Veuillez réessayer.'
+                }));
+            }
         } finally {
             setLoading(false);
         }
+    };
+
+    const downloadAppointmentInfo = () => {
+        const doc = new jsPDF();
+        doc.setFontSize(16);
+        doc.text("Informations de Rendez-vous", 10, 10);
+        doc.setFontSize(12);
+        doc.text(`Nom: ${formData.nom}`, 10, 30);
+        doc.text(`Prenom: ${formData.prenom}`, 10, 40);
+        doc.text(`Telephone: ${formData.telephone}`, 10, 50);
+        doc.text(`Pays: ${formData.pays}`, 10, 60);
+        doc.text(`Ville: ${formData.ville}`, 10, 70);
+        doc.text(`Numero d'identite: ${formData.numero_identite}`, 10, 80);
+        doc.text(`Type d'identite: ${formData.type_identite}`, 10, 90);
+        doc.text(`Date de rendez-vous: ${formData.date_rdv}`, 10, 100);
+        doc.text(`Heure de rendez-vous: ${formData.heure_rdv}`, 10, 110);
+        doc.text(`Service: ${formData.type_service}`, 10, 120);
+        doc.text(`Agence: ${formData.agence}`, 10, 130);
+        doc.save("informations_rendez_vous_modifie.pdf");
     };
 
     const generateTimeOptions = () => {
@@ -205,7 +263,7 @@ export default function ModifierRendezVousPage() {
                                         name="date_rdv"
                                         value={formData.date_rdv}
                                         onChange={handleChange}
-                                        min={new Date().toISOString().split('T')[0]}
+                                        min={format(new Date(), 'yyyy-MM-dd')}
                                         onKeyDown={(e) => e.preventDefault()}
                                     />
                                     {errors.date_rdv && <div className="invalid-feedback">{errors.date_rdv}</div>}
@@ -262,14 +320,38 @@ export default function ModifierRendezVousPage() {
                                 </div>
 
                                 <div className="d-grid gap-2">
-                                    <button type="submit" className="btn btn-primary" disabled={loading}>
+                                    <button
+                                        type="submit"
+                                        className="btn btn-primary"
+                                        disabled={loading || appointmentModified}
+                                    >
                                         {loading ? 'Modification en cours...' : 'Modifier le rendez-vous'}
-                                    </button>
-                                    <button type="button" className="btn btn-outline-secondary" onClick={() => navigate('/rendezvous')}>
-                                        Annuler
                                     </button>
                                 </div>
                             </form>
+                        </div>
+                    </div>
+                </div>
+                <div className="col-md-8 my-2">
+                    <div className="card shadow">
+                        <div className="card-body">
+                            <div className="d-grid gap-2">
+                                <button
+                                    type="button"
+                                    className="btn btn-primary"
+                                    onClick={downloadAppointmentInfo}
+                                    disabled={!appointmentModified}
+                                >
+                                    Telecharger rendez-vous modifié
+                                </button>
+                                <button
+                                    type="button"
+                                    className="btn btn-outline-secondary"
+                                    onClick={() => navigate('/rendezvous')}
+                                >
+                                    Annuler
+                                </button>
+                            </div>
                         </div>
                     </div>
                 </div>

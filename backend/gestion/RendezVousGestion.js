@@ -1,4 +1,6 @@
 const rendezVousDao = require('../dao/RendezVousDao');
+const DataDao = require('../dao/DataDao');
+
 const RendezVous = require('../pojo/RendezVous');
 
 class RendezVousGestion {
@@ -15,9 +17,17 @@ class RendezVousGestion {
                 throw new Error('Date ou heure du rendez-vous invalide');
             }
 
+            const nombreRdvMemeDateHeureAgence = await DataDao.countRdvHeureDateAgence(rendezVous.agence, rendezVous.date_rdv, rendezVous.heure_rdv);
+            const nombreEmployesAgence = await DataDao.countEmployesAgence(rendezVous.agence);
+
+            if (nombreRdvMemeDateHeureAgence[0][0].nombreRendezVous >= nombreEmployesAgence[0][0].nombre_employes) {
+                throw new Error('full');
+            }
+
             if (dateRdv <= now) {
                 throw new Error('La date et l\'heure du rendez-vous doivent être dans le futur');
             }
+
             const result = await rendezVousDao.create(rendezVous); return result;
         } catch (error) {
             console.error('Error in creerRendezVous:', error);
@@ -33,7 +43,7 @@ class RendezVousGestion {
             if (rendezVous.id_affilie !== id_affilie) {
                 throw new Error('Vous n\'êtes pas autorisé à annuler ce rendez-vous');
             }
-            
+
             return rendezVous;
         } catch (error) {
             console.error('Erreur dans obtenirRendezVous:', error);
@@ -92,10 +102,15 @@ class RendezVousGestion {
                 throw new Error('La nouvelle date du rendez-vous doit être dans le futur');
             }
 
-            if (rendezVous.type_service === "poser les documents d'inscription") {
-                rendezVous.heure_rdv = "08:00:00";
+
+            const nombreRdvMemeDateHeureAgence = await DataDao.countRdvHeureDateAgence(rendezVous.agence, rendezVous.date_rdv, rendezVous.heure_rdv);
+            const nombreEmployesAgence = await DataDao.countEmployesAgence(rendezVous.agence);
+
+            if (nombreRdvMemeDateHeureAgence[0][0].nombreRendezVous >= nombreEmployesAgence[0][0].nombre_employes) {
+                throw new Error('full');
             }
-            const updated = await rendezVousDao.update({ ...rendezVous ,agence : rendezVous.agence }); return updated;
+
+            const updated = await rendezVousDao.update({ ...rendezVous, agence: rendezVous.agence }); return updated;
         } catch (error) {
             console.error('Erreur dans mettreAJourRendezVous:', error);
             throw error;

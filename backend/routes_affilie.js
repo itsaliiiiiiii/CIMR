@@ -3,11 +3,9 @@ const router = express.Router();
 const jwt = require('jsonwebtoken');
 const bcrypt = require('bcrypt');
 
-const { RendezVous } = require('./pojo/RendezVous');
-const { fetchAgence, fetchService, fetchCountries, fetchCities } = require('./dao/AgenceDao');
+const { fetchAgence, fetchService, fetchCountries, fetchCities } = require('./dao/DataDao');
 const affilieGestion = require('./gestion/AffilieGestion');
 const rendezVousGestion = require('./gestion/RendezVousGestion');
-
 
 const verifyToken = async (req, res, next) => {
     try {
@@ -111,8 +109,6 @@ router.get('/affilie', verifyToken, async (req, res) => {
     }
 });
 
-
-
 // Route pour créer un rendez-vous
 router.post('/rendez-vous', verifyToken, async (req, res) => {
     try {
@@ -128,6 +124,10 @@ router.post('/rendez-vous', verifyToken, async (req, res) => {
 
         return res.status(201).json({ message: 'Rendez-vous créé avec succès', isValid: true });
     } catch (error) {
+        if (error.message.includes('full')) {
+            return res.status(410).json({ message: "full" });
+        }
+
         res.status(500).json({ message: 'Erreur lors de la création du rendez-vous', error: error.message });
     }
 });
@@ -164,19 +164,23 @@ router.put('/rendez-vous/:appointmentId/annuler', verifyToken, async (req, res) 
 router.put('/rendez-vous/:appointmentId/modifier', verifyToken, async (req, res) => {
     try {
 
-        const rendezvous ={
-            numero_rdv : req.params.appointmentId,
-            agence : req.body.agence,
-            id_affilie : req.id_affilie,
-            date_rdv : req.body.date_rdv,
-            heure_rdv : req.body.heure_rdv,
-            type_service : req.body.type_service,
-            etat_rdv : req.body.etat_rdv
+        const rendezvous = {
+            numero_rdv: req.params.appointmentId,
+            agence: req.body.agence,
+            id_affilie: req.id_affilie,
+            date_rdv: req.body.date_rdv,
+            heure_rdv: req.body.heure_rdv,
+            type_service: req.body.type_service,
+            etat_rdv: req.body.etat_rdv
         };
 
         const rendezVous = await rendezVousGestion.mettreAJourRendezVous(rendezvous);
         res.json({ rendezVous: rendezVous, isValid: true });
     } catch (error) {
+        if (error.message.includes('full')) {
+            return res.status(410).json({ message: "full" });
+        }
+        
         res.status(500).json({ message: 'Erreur lors de la modification du rendez-vous', error: error.message });
     }
 }

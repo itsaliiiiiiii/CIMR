@@ -25,7 +25,7 @@ export default function InformationRendezVous() {
         doc.text(`Type d'identité: ${allData.type_identite}`, 10, 50);
         doc.text(`Numéro d'identité: ${allData.numero_identite}`, 10, 60);
         doc.text(`Matricule: ${allData.numero_matricule}`, 10, 70);
-        doc.text(`Date du rendez-vous: ${allData.date_rdv}`, 10, 80);
+        doc.text(`Date du rendez-vous: ${allData.date_rdv +" - "+ allData.heure_rdv}`, 10, 80);
         doc.text(`Agence: ${allData.agence}`, 10, 90);
         doc.setFontSize(16);
         doc.text("Documents obligatoires:", 10, 110);
@@ -68,6 +68,7 @@ export default function InformationRendezVous() {
                                         <li className="list-group-item">Numéro d'identité: {allData.numero_identite}</li>
                                         <li className="list-group-item">Matricule: {allData.numero_matricule}</li>
                                         <li className="list-group-item">Date du rendez-vous: {allData.date_rdv}</li>
+                                        <li className="list-group-item">Heure du rendez-vous: {allData.heure_rdv}</li>
                                         <li className="list-group-item">Agence: {allData.agence}</li>
                                         <li className="list-group-item">Type de service: poser les document d'inscription</li>
                                     </ul>
