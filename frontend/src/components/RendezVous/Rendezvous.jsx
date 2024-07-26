@@ -5,6 +5,7 @@ import AfficherRendezVousPage from "./AfficherRendezVousPage"
 import AjouterRendezVousPage from "./AjouterRendezVousPage";
 import { Routes, Route } from "react-router-dom";
 import Notification from "../Nofitication";
+import ModifierRendezVousPage from "./ModifierRendezVousPage";
 
 const API_BASE_URL = "http://localhost:4000/cimr";
 
@@ -102,7 +103,7 @@ export default function RendezVous() {
                     <Routes>
                         <Route path="/" element={<AfficherRendezVousPage />} />
                         <Route path="/reservation" element={<AjouterRendezVousPage />} />
-                        <Route path="/modification" element={<AjouterRendezVousPage />} />
+                        <Route path="/modification/:id" element={<ModifierRendezVousPage />} />
                         <Route path="/*" element={<Navigate to="/rendezvous" />} />
                     </Routes>
                 </div>

@@ -141,15 +141,46 @@ router.get('/rendez-vous', verifyToken, async (req, res) => {
     }
 });
 
+// Route pour obtenir un rendez-vous spécifique
+router.get('/rendez-vous/:appointmentId', verifyToken, async (req, res) => {
+    try {
+        const rendezVous = await rendezVousGestion.obtenirRendezVous(req.params.appointmentId, req.id_affilie);
+        res.json({ rendezVous: rendezVous, isValid: true });
+    } catch (error) {
+        res.status(500).json({ message: 'Erreur lors de la recherche du rendez-vous', error: error.message });
+    }
+});
+
 router.put('/rendez-vous/:appointmentId/annuler', verifyToken, async (req, res) => {
     console.log(req.params.appointmentId, req.id_affilie);
     try {
         const rendezVous = await rendezVousGestion.annulerRendezVous(req.params.appointmentId, req.id_affilie);
-        res.json({ rendezVous: rendezVous ,isValid: true });
+        res.json({ rendezVous: rendezVous, isValid: true });
     } catch (error) {
         res.status(500).json({ message: 'Erreur lors de l\'annulation du rendez-vous', error: error.message });
     }
 });
+
+router.put('/rendez-vous/:appointmentId/modifier', verifyToken, async (req, res) => {
+    try {
+
+        const rendezvous ={
+            numero_rdv : req.params.appointmentId,
+            agence : req.body.agence,
+            id_affilie : req.id_affilie,
+            date_rdv : req.body.date_rdv,
+            heure_rdv : req.body.heure_rdv,
+            type_service : req.body.type_service,
+            etat_rdv : req.body.etat_rdv
+        };
+
+        const rendezVous = await rendezVousGestion.mettreAJourRendezVous(rendezvous);
+        res.json({ rendezVous: rendezVous, isValid: true });
+    } catch (error) {
+        res.status(500).json({ message: 'Erreur lors de la modification du rendez-vous', error: error.message });
+    }
+}
+);
 
 // route fetch countries and cities
 router.get('/countries', async (req, res) => {

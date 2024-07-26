@@ -46,6 +46,10 @@ export default function AfficherRendezVousPage() {
 
 
 
+    const handleModifierButton = (appointmentId) => () => {
+        navigate(`/rendezvous/modification/${appointmentId}`);
+    };
+
     const handleAnnuleButton = (appointmentId) => async () => {
         const token = localStorage.getItem('tokenCIMR');
         if (!token) {
@@ -53,7 +57,7 @@ export default function AfficherRendezVousPage() {
             return;
         }
         try {
-            const response = await axios.put(`${API_BASE_URL}/rendez-vous/${appointmentId}/annuler`,{}, {
+            const response = await axios.put(`${API_BASE_URL}/rendez-vous/${appointmentId}/annuler`, {}, {
                 headers: { 'Authorization': `Bearer ${token}` }
             });
 
@@ -117,6 +121,8 @@ export default function AfficherRendezVousPage() {
         <>
             <h2 className="mb-4">Mes Rendez-vous</h2>
             <div className="row g-4" id="rendezvous">
+                {appointments.length === 0 ? <p>Aucun rendez-vous</p> : null}
+
                 {appointments.map((appointment) => {
                     const appointmentDate = new Date(appointment.date_rdv);
 
@@ -133,6 +139,7 @@ export default function AfficherRendezVousPage() {
                                     <h5 className="card-title">Rendez-vous</h5>
                                     <p className="card-text"><strong>Date:</strong> {formattedDate}</p>
                                     <p className="card-text"><strong>Heure:</strong> {appointment.heure_rdv}</p>
+                                    <p className="card-text"><strong>Agence:</strong> {appointment.agence}</p>
                                     <p className="card-text"><strong>Service:</strong> {appointment.type_service}</p>
                                     <p className="card-text">
                                         {getBadgeClass(appointment.etat_rdv)}
@@ -141,7 +148,7 @@ export default function AfficherRendezVousPage() {
                                 {appointment.etat_rdv === 'Prévu' && (
                                     <div className="card-footer bg-transparent border-0">
                                         <div className="d-flex justify-content-between">
-                                            <button className="btn btn-sm btn-outline-primary" onClick={() => console.log(`Modifier ${appointment.numero_rdv}`)}>
+                                            <button className="btn btn-sm" onClick={handleModifierButton(appointment.numero_rdv)}>
                                                 Modifier
                                             </button>
                                             <button className="btn btn-sm btn-outline-danger" onClick={handleAnnuleButton(appointment.numero_rdv)}>

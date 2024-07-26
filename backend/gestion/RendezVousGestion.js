@@ -26,9 +26,15 @@ class RendezVousGestion {
         }
     }
 
-    async obtenirRendezVous(id) {
+    async obtenirRendezVous(id, id_affilie) {
         try {
-            const rendezVous = await rendezVousDao.findById(id); return rendezVous;
+            const rendezVous = await rendezVousDao.findById(id);
+
+            if (rendezVous.id_affilie !== id_affilie) {
+                throw new Error('Vous n\'êtes pas autorisé à annuler ce rendez-vous');
+            }
+            
+            return rendezVous;
         } catch (error) {
             console.error('Erreur dans obtenirRendezVous:', error);
             throw error;
@@ -73,7 +79,7 @@ class RendezVousGestion {
 
     async mettreAJourRendezVous(rendezVous) {
         try {
-            const existingRdv = await rendezVousDao.findById(rendezVous.id);
+            const existingRdv = await rendezVousDao.findById(rendezVous.numero_rdv);
             if (!existingRdv) {
                 throw new Error('Rendez-vous non trouvé');
             }
@@ -89,8 +95,7 @@ class RendezVousGestion {
             if (rendezVous.type_service === "poser les documents d'inscription") {
                 rendezVous.heure_rdv = "08:00:00";
             }
-
-            const updated = await rendezVousDao.update(rendezVous); return updated;
+            const updated = await rendezVousDao.update({ ...rendezVous ,agence : rendezVous.agence }); return updated;
         } catch (error) {
             console.error('Erreur dans mettreAJourRendezVous:', error);
             throw error;
