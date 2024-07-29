@@ -12,7 +12,7 @@ async function createAffilieTable() {
     numero_telephone VARCHAR(20) NOT NULL UNIQUE,
     pays VARCHAR(100) NOT NULL,
     ville VARCHAR(100) NOT NULL,
-    statusDocuments VARCHAR(50) DEFAULT 'En attente',
+    status_documents VARCHAR(50) DEFAULT 'En attente',
     type_identite VARCHAR(50) NOT NULL,
     numero_identite VARCHAR(50) NOT NULL UNIQUE
     )

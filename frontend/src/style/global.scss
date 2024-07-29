@@ -80,3 +80,23 @@ body {
 .toast:not(.show) {
     display: inline !important;
 }
+
+.button-download{
+    background-color: transparent !important;
+    outline: none !important;
+    border: none !important;
+    display: flex !important;
+    justify-content: center !important;
+    align-items: center !important;
+    height: 30px !important;
+    path{
+        fill:$secondary-color; 
+    }
+}
+
+.button-download:hover{
+    background-color: $secondary-color !important;
+    path{
+        fill:$primary-back-color; 
+    }
+}

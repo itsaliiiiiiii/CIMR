@@ -12,7 +12,8 @@ async function createRendezVousTable() {
     etat_rdv VARCHAR(100) DEFAULT 'Prévu',
     FOREIGN KEY (id_affilie) REFERENCES affilie(id_affilie) ON DELETE CASCADE,
     FOREIGN KEY (agence) REFERENCES agence(agence) ON DELETE CASCADE,
-    FOREIGN KEY (type_service) REFERENCES service(service) ON DELETE CASCADE
+    FOREIGN KEY (type_service) REFERENCES service(service) ON DELETE CASCADE,
+    UNIQUE (id_affilie, date_rdv)
     )
     `;
 

@@ -7,6 +7,8 @@ const { fetchAgence, fetchService, fetchCountries, fetchCities } = require('./da
 const affilieGestion = require('./gestion/AffilieGestion');
 const rendezVousGestion = require('./gestion/RendezVousGestion');
 
+
+
 const verifyToken = async (req, res, next) => {
     try {
         const authHeader = req.headers['authorization'];
@@ -116,7 +118,7 @@ router.post('/rendez-vous', verifyToken, async (req, res) => {
             id_affilie: req.id_affilie,
             agence: req.body.agence,
             date_rdv: req.body.date_rdv,
-            heure_rdv: req.body.heure_rdv === null ? '08:00:00' : req.body.heure_rdv,
+            heure_rdv: req.body.heure_rdv,
             type_service: req.body.type_service || "poser les documents d'inscription"
         };
 
@@ -126,6 +128,8 @@ router.post('/rendez-vous', verifyToken, async (req, res) => {
     } catch (error) {
         if (error.message.includes('full')) {
             return res.status(410).json({ message: "full" });
+        } else if (error.message.includes('inscription')) {
+            return res.status(411).json({ message: "inscription" });
         }
 
         res.status(500).json({ message: 'Erreur lors de la création du rendez-vous', error: error.message });
@@ -179,8 +183,10 @@ router.put('/rendez-vous/:appointmentId/modifier', verifyToken, async (req, res)
     } catch (error) {
         if (error.message.includes('full')) {
             return res.status(410).json({ message: "full" });
+        } else if (error.message.includes('inscription')) {
+            return res.status(411).json({ message: "inscription" });
         }
-        
+
         res.status(500).json({ message: 'Erreur lors de la modification du rendez-vous', error: error.message });
     }
 }

@@ -70,12 +70,16 @@ export default function Information1() {
             newErrors.nom = 'Le nom est requis';
         } else if (!/^[a-zA-Z\s]*$/.test(formData.nom)) {
             newErrors.nom = 'Le nom ne doit contenir que des lettres';
+        } else if (formData.nom.trim().length < 3) {
+            newErrors.nom = 'Le nom doit contenir au moins 3 caractères';
         }
 
         if (!formData.prenom.trim()) {
             newErrors.prenom = 'Le prénom est requis';
         } else if (!/^[a-zA-Z\s]*$/.test(formData.prenom)) {
             newErrors.prenom = 'Le prénom ne doit contenir que des lettres';
+        }else if (formData.prenom.trim().length < 3) {
+            newErrors.prenom = 'Le prénom doit contenir au moins 3 caractères';
         }
 
         if (!formData.pays) {

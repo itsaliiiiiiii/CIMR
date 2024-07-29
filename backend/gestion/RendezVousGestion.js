@@ -1,7 +1,6 @@
 const rendezVousDao = require('../dao/RendezVousDao');
 const DataDao = require('../dao/DataDao');
 
-const RendezVous = require('../pojo/RendezVous');
 
 class RendezVousGestion {
     async creerRendezVous(rendezVous) {
@@ -15,6 +14,21 @@ class RendezVousGestion {
 
             if (isNaN(dateRdv.getTime())) {
                 throw new Error('Date ou heure du rendez-vous invalide');
+            }
+
+            if (dateRdv.getDay() === 0 || dateRdv.getDay() === 6) {
+                throw new Error('Le rendez-vous doit être pris en semaine');
+            }
+
+            if (dateRdv.getHours() < 8 || dateRdv.getHours() > 16) {
+                throw new Error('L\'heure du rendez-vous doit être entre 8h et 16h');
+            }
+
+            const status_documents_affilie = await rendezVousDao.status_documents_affilie(rendezVous.id_affilie);
+            console.log(status_documents_affilie[0][0].statusDocuments);
+
+            if (status_documents_affilie[0][0].statusDocuments == "En attente" && rendezVous.type_service != "POSER LES DOCUMENTS D'INSCRIPTION") {  // status_documents
+                throw new Error('inscription');
             }
 
             const nombreRdvMemeDateHeureAgence = await DataDao.countRdvHeureDateAgence(rendezVous.agence, rendezVous.date_rdv, rendezVous.heure_rdv);
@@ -59,6 +73,7 @@ class RendezVousGestion {
             throw error;
         }
     }
+
     // annulerRendezVous
     async annulerRendezVous(id, id_affilie) {
         try {
@@ -102,6 +117,19 @@ class RendezVousGestion {
                 throw new Error('La nouvelle date du rendez-vous doit être dans le futur');
             }
 
+            if (new Date(rendezVous.date_rdv).getDay() === 0 || new Date(rendezVous.date_rdv).getDay() === 6) {
+                throw new Error('Le rendez-vous doit être pris en semaine');
+            }
+
+            if (new Date(rendezVous.heure_rdv).getHours() < 8 || new Date(rendezVous.heure_rdv).getHours() > 16) {
+                throw new Error('L\'heure du rendez-vous doit être entre 8h et 16h');
+            }
+
+            const status_documents_affilie = await rendezVousDao.status_documents_affilie(rendezVous.id_affilie);
+
+            if (status_documents_affilie[0][0].statusDocuments == "En attente" && rendezVous.type_service != "POSER LES DOCUMENTS D'INSCRIPTION") {  // status_documents
+                throw new Error('inscription');
+            }
 
             const nombreRdvMemeDateHeureAgence = await DataDao.countRdvHeureDateAgence(rendezVous.agence, rendezVous.date_rdv, rendezVous.heure_rdv);
             const nombreEmployesAgence = await DataDao.countEmployesAgence(rendezVous.agence);
@@ -110,27 +138,10 @@ class RendezVousGestion {
                 throw new Error('full');
             }
 
-            const updated = await rendezVousDao.update({ ...rendezVous, agence: rendezVous.agence }); return updated;
+            const updated = await rendezVousDao.update({ ...rendezVous });
+            return updated;
         } catch (error) {
             console.error('Erreur dans mettreAJourRendezVous:', error);
-            throw error;
-        }
-    }
-
-    async supprimerRendezVous(id) {
-        try {
-            const rendezVous = await rendezVousDao.findById(id);
-            if (!rendezVous) {
-                throw new Error('Rendez-vous non trouvé');
-            }
-
-            if (new Date(rendezVous.date_rdv) < new Date()) {
-                throw new Error('Impossible de supprimer un rendez-vous passé');
-            }
-
-            const deleted = await rendezVousDao.delete(id); return deleted;
-        } catch (error) {
-            console.error('Erreur dans supprimerRendezVous:', error);
             throw error;
         }
     }

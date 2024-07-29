@@ -81,6 +81,11 @@ async function creerAffilie(nom, prenom, email, date_naissance, numero_telephone
             return res.status(400).json({ message: 'Tous les champs sont requis' });
         }
 
+        if(nom.length < 3 || prenom.length < 3 || !/^[a-zA-Z]+$/.test(nom) || !/^[a-zA-Z]+$/.test(prenom)) 
+        {
+            return res.status(400).json({ message: 'Le nom et le prénom doivent contenir au moins 3 lettres' });
+        }
+
         const existingAffilie = await findByNumeroIdentite(numero_identite);
         if (existingAffilie) {
             throw new Error('Un affilié avec ce numéro d\'identité existe déjà');

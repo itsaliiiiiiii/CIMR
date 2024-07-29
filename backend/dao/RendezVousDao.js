@@ -36,6 +36,16 @@ class RendezVousDao {
         }
     }
 
+    async status_documents_affilie(id_affilie) {
+        const query = 'SELECT statusDocuments FROM affilie WHERE id_affilie = ?'; // status_documents
+        try {
+            return await connection.query(query, [id_affilie]);
+        } catch (error) {
+            console.error('Erreur lors de la recherche du rendez-vous:', error);
+            throw new Error('Erreur lors de la recherche du rendez-vous');
+        }
+    }
+
     async findAllById(id_affilie) {
         const query = 'SELECT * FROM rendez_vous WHERE id_affilie = ? ORDER BY date_rdv DESC, heure_rdv DESC';
         try {

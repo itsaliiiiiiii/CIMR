@@ -68,7 +68,7 @@ async function countEmployesAgence(agence) {
 }
 
 async function countRdvHeureDateAgence(agence, date_rdv, heure_rdv){
-    const query = 'SELECT COUNT(*)  AS nombreRendezVous FROM rendez_vous WHERE agence = ? AND date_rdv = ? AND heure_rdv = ?';
+    const query = 'SELECT COUNT(*)  AS nombreRendezVous FROM rendez_vous WHERE agence = ? AND date_rdv = ? AND heure_rdv = ? AND NOT etat_rdv = "Annulé"';
     try {
         return await connection.query(query, [agence, date_rdv, heure_rdv]);
     } catch (error) {

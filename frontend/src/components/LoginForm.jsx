@@ -1,7 +1,8 @@
 import React, { useState } from 'react';
 import { useNavigate } from 'react-router-dom';
 import Captcha from './Captcha';
-import Notification from './Nofitication';
+
+
 
 const API_BASE_URL = 'http://localhost:4000/cimr';
 
@@ -19,7 +20,6 @@ export default function Login() {
     const handleChange = (e) => {
         const { name, value } = e.target;
         setFormData({ ...formData, [name]: value });
-        // Clear error when user starts typing
         setErrors(prevErrors => ({ ...prevErrors, [name]: '' }));
     };
 
@@ -81,7 +81,7 @@ export default function Login() {
                 localStorage.setItem('tokenCIMR', data.token);
                 navigate('/rendezvous', { state: { notification: 'Connexion réussie ' } });
             } else {
-                const text = await response.text();
+                await response.text();
                 throw new Error('Réponse inattendue du serveur');
             }
         } catch (e) {
@@ -93,74 +93,72 @@ export default function Login() {
     };
 
     return (
-        <>
-            <div id="loginForm">
-                <section className="position-relative py-0 py-xl-0">
-                    <div className="container">
-                        <div className="row mb-5">
-                            <div className="col-md-8 col-xl-6 text-center mx-auto">
-                                <p className="w-lg-50">Veuillez saisir les informations ci-dessous</p>
-                            </div>
-                        </div>
-                        <div className="row d-flex justify-content-center">
-                            <div className="col-md-6 col-xl-4">
-                                <div className="card mb-5">
-                                    <div className="card-body d-flex flex-column align-items-center form">
-                                        <form className="text-center" onSubmit={handleSubmit}>
-                                            <div className="mb-3">
-                                                <input
-                                                    className={`form-control ${errors.numero_identite ? 'is-invalid' : ''}`}
-                                                    type="text"
-                                                    name="numero_identite"
-                                                    placeholder="Numéro d'identité"
-                                                    value={formData.numero_identite}
-                                                    onChange={handleChange}
-                                                />
-                                                {errors.numero_identite && <div className="invalid-feedback">{errors.numero_identite}</div>}
-                                            </div>
-                                            <div className="mb-3">
-                                                <input
-                                                    className={`form-control ${errors.numero_matricule ? 'is-invalid' : ''}`}
-                                                    type="text"
-                                                    name="numero_matricule"
-                                                    placeholder="Matricule"
-                                                    value={formData.numero_matricule}
-                                                    onChange={handleChange}
-                                                />
-                                                {errors.numero_matricule && <div className="invalid-feedback">{errors.numero_matricule}</div>}
-                                            </div>
-                                            <div className="mb-3">
-                                                <input
-                                                    className={`form-control ${errors.numero_telephone ? 'is-invalid' : ''}`}
-                                                    type="tel"
-                                                    name="numero_telephone"
-                                                    placeholder="Téléphone (ex: +33123456789)"
-                                                    value={formData.numero_telephone}
-                                                    onChange={handleChange}
-                                                />
-                                                {errors.numero_telephone && <div className="invalid-feedback">{errors.numero_telephone}</div>}
-                                            </div>
-
-                                            <Captcha onValidate={setCaptchaValid} />
-                                            <div className="mb-3">
-                                                <button
-                                                    className="btn btn-primary d-block w-100"
-                                                    type="submit"
-                                                    disabled={isLoading || !captchaValid}
-                                                >
-                                                    {isLoading ? 'Chargement...' : 'Se connecter'}
-                                                </button>
-                                            </div>
-                                        </form>
-                                        <a onClick={handleRegister} style={{ cursor: "pointer" }}>Créer un Compte ?</a>
-                                    </div>
-                                </div>
-                                {errors.submit && <div className="alert alert-danger">{errors.submit}</div>}
-                            </div>
+        <div id="loginForm">
+            <section className="position-relative py-0 py-xl-0">
+                <div className="container">
+                    <div className="row mb-5">
+                        <div className="col-md-8 col-xl-6 text-center mx-auto">
+                            <p className="w-lg-50">Veuillez saisir les informations ci-dessous</p>
                         </div>
                     </div>
-                </section>
-            </div>
-        </>
+                    <div className="row d-flex justify-content-center">
+                        <div className="col-md-6 col-xl-4">
+                            <div className="card mb-5">
+                                <div className="card-body d-flex flex-column align-items-center form">
+                                    <form className="text-center" onSubmit={handleSubmit}>
+                                        <div className="mb-3">
+                                            <input
+                                                className={`form-control ${errors.numero_identite ? 'is-invalid' : ''}`}
+                                                type="text"
+                                                name="numero_identite"
+                                                placeholder="Numéro d'identité"
+                                                value={formData.numero_identite}
+                                                onChange={handleChange}
+                                            />
+                                            {errors.numero_identite && <div className="invalid-feedback">{errors.numero_identite}</div>}
+                                        </div>
+                                        <div className="mb-3">
+                                            <input
+                                                className={`form-control ${errors.numero_matricule ? 'is-invalid' : ''}`}
+                                                type="text"
+                                                name="numero_matricule"
+                                                placeholder="Matricule"
+                                                value={formData.numero_matricule}
+                                                onChange={handleChange}
+                                            />
+                                            {errors.numero_matricule && <div className="invalid-feedback">{errors.numero_matricule}</div>}
+                                        </div>
+                                        <div className="mb-3">
+                                            <input
+                                                className={`form-control ${errors.numero_telephone ? 'is-invalid' : ''}`}
+                                                type="tel"
+                                                name="numero_telephone"
+                                                placeholder="Téléphone (ex: +33123456789)"
+                                                value={formData.numero_telephone}
+                                                onChange={handleChange}
+                                            />
+                                            {errors.numero_telephone && <div className="invalid-feedback">{errors.numero_telephone}</div>}
+                                        </div>
+
+                                        <Captcha onValidate={setCaptchaValid} />
+                                        <div className="mb-3">
+                                            <button
+                                                className="btn btn-primary d-block w-100"
+                                                type="submit"
+                                                disabled={isLoading || !captchaValid}
+                                            >
+                                                {isLoading ? 'Chargement...' : 'Se connecter'}
+                                            </button>
+                                        </div>
+                                    </form>
+                                    <a onClick={handleRegister} style={{ cursor: "pointer" }}>Créer un Compte ?</a>
+                                </div>
+                            </div>
+                            {errors.submit && <div className="alert alert-danger">{errors.submit}</div>}
+                        </div>
+                    </div>
+                </div>
+            </section>
+        </div>
     );
 }

@@ -1,6 +1,5 @@
 import React from 'react';
-import { Routes, Route } from 'react-router-dom';
-import { Navigate } from 'react-router-dom';
+import { Routes, Route, Navigate } from 'react-router-dom';
 
 import Information1 from './information1';
 import Information2 from './information2';
@@ -13,7 +12,7 @@ export default function Register() {
     return (
         <Routes>
             <Route path="/*" element={<Navigate to="/register/information1" />
-} />
+            } />
             <Route path="/information1" element={<Information1 />} />
             <Route path="/information2" element={<Information2 />} />
             <Route path="/information/personnel" element={<Information />} />

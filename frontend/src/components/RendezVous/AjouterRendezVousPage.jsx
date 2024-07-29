@@ -3,6 +3,8 @@ import { useNavigate } from 'react-router-dom';
 import axios from 'axios';
 import { jsPDF } from "jspdf";
 
+import Notification from "../Nofitication";
+
 const API_BASE_URL = "http://localhost:4000/cimr";
 
 export default function AjouterRendezVousPage() {
@@ -107,7 +109,6 @@ export default function AjouterRendezVousPage() {
                         numero_identite: response.data.affilie.numero_identite,
                         type_identite: response.data.affilie.type_identite
                     }));
-
                 } else {
                     throw new Error('Failed to get affilie');
                 }
@@ -116,18 +117,25 @@ export default function AjouterRendezVousPage() {
             }
         } catch (error) {
             console.error('Error adding appointment:', error);
-            if (error.response && error.response.data && error.response.data.message == "full") {
+            if (error.response && error.response.data && error.response.data.message === "full") {
                 setErrors(prevErrors => ({
                     ...prevErrors,
-                    submit: "Choisir une autre date ou heure de rendez-vous, l'heure est déjà prise." 
+                    submit: "Choisir une autre date ou heure de rendez-vous, l'heure est déjà prise."
                 }));
-            }else{
+
+            } else if (error.response && error.response.data && error.response.data.message === "inscription") {
+                setErrors(prevErrors => ({
+                    ...prevErrors,
+                    submit: "il est obligatoire de choisir 'POSER LES DOCUMENTS D'INSCRIPTION', vous devez d'abord déposer les documents d'inscription."
+                }));
+            }
+            else {
                 setErrors(prevErrors => ({
                     ...prevErrors,
                     submit: 'Une erreur est survenue lors de l\'ajout du rendez-vous. Veuillez réessayer.'
                 }));
             }
-            
+
         } finally {
             setLoading(false);
         }
@@ -206,117 +214,120 @@ export default function AjouterRendezVousPage() {
     };
 
     return (
-        <div className="container py-5">
-            <h2 className="mb-4">Ajouter un nouveau rendez-vous</h2>
-            <div className="row justify-content-center">
-                <div className="col-md-8">
-                    <div className="card shadow">
-                        <div className="card-body">
-                            {errors.submit && <div className="alert alert-danger">{errors.submit}</div>}
-                            <form onSubmit={handleSubmit}>
-                                <div className="mb-3">
-                                    <label htmlFor="date_rdv" className="form-label">Date</label>
-                                    <input
-                                        type="date"
-                                        className={`form-control ${errors.date_rdv ? 'is-invalid' : ''}`}
-                                        id="date_rdv"
-                                        name="date_rdv"
-                                        value={formData.date_rdv}
-                                        onChange={handleChange}
-                                        min={new Date().toISOString().split('T')[0]}
-                                        onKeyDown={(e) => e.preventDefault()}
-                                    />
-                                    {errors.date_rdv && <div className="invalid-feedback">{errors.date_rdv}</div>}
-                                </div>
-                                <div className="mb-3">
-                                    <label htmlFor="heure" className="form-label">Heure</label>
-                                    <select
-                                        className={`form-select ${errors.heure_rdv ? 'is-invalid' : ''}`}
-                                        id="heure"
-                                        name="heure_rdv"
-                                        value={formData.heure_rdv}
-                                        onChange={handleChange}
-                                    >
-                                        <option value="">Sélectionnez une heure</option>
-                                        {generateTimeOptions()}
-                                    </select>
-                                    {errors.heure_rdv && <div className="invalid-feedback">{errors.heure_rdv}</div>}
-                                </div>
-                                <div className="mb-3">
-                                    <label htmlFor="service" className="form-label">Service</label>
-                                    <select
-                                        className={`form-control ${errors.type_service ? 'is-invalid' : ''}`}
-                                        id="service"
-                                        name="type_service"
-                                        value={formData.type_service}
-                                        onChange={handleChange}
-                                    >
-                                        <option value="">Sélectionnez Service</option>
-                                        {service.map((agenceObj, index) => (
-                                            <option key={index} value={agenceObj.service}>
-                                                {agenceObj.service}
-                                            </option>
-                                        ))}
-                                    </select>
-                                    {errors.type_service && <div className="invalid-feedback">{errors.type_service}</div>}
-                                </div>
-                                <div className="mb-3">
-                                    <label htmlFor="agence" className="form-label">Choisir une agence</label>
-                                    <select
-                                        className={`form-control ${errors.agence ? 'is-invalid' : ''}`}
-                                        id="agence"
-                                        name="agence"
-                                        value={formData.agence}
-                                        onChange={handleChange}
-                                    >
-                                        <option value="">Sélectionnez une agence</option>
-                                        {agences.map((agenceObj, index) => (
-                                            <option key={index} value={agenceObj.agence}>
-                                                {agenceObj.agence}
-                                            </option>
-                                        ))}
-                                    </select>
-                                    {errors.agence && <div className="invalid-feedback">{errors.agence}</div>}
-                                </div>
+        <>
+            {appointmentTaken && <Notification message="Rendez-vous ajouté avec succès" />}
+            <div className="container py-5">
+                <h2 className="mb-4">Ajouter un nouveau rendez-vous</h2>
+                <div className="row justify-content-center">
+                    <div className="col-md-8">
+                        <div className="card shadow">
+                            <div className="card-body">
+                                {errors.submit && <div className="alert alert-danger">{errors.submit}</div>}
+                                <form onSubmit={handleSubmit}>
+                                    <div className="mb-3">
+                                        <label htmlFor="date_rdv" className="form-label">Date</label>
+                                        <input
+                                            type="date"
+                                            className={`form-control ${errors.date_rdv ? 'is-invalid' : ''}`}
+                                            id="date_rdv"
+                                            name="date_rdv"
+                                            value={formData.date_rdv}
+                                            onChange={handleChange}
+                                            min={new Date().toISOString().split('T')[0]}
+                                            onKeyDown={(e) => e.preventDefault()}
+                                        />
+                                        {errors.date_rdv && <div className="invalid-feedback">{errors.date_rdv}</div>}
+                                    </div>
+                                    <div className="mb-3">
+                                        <label htmlFor="heure" className="form-label">Heure</label>
+                                        <select
+                                            className={`form-select ${errors.heure_rdv ? 'is-invalid' : ''}`}
+                                            id="heure"
+                                            name="heure_rdv"
+                                            value={formData.heure_rdv}
+                                            onChange={handleChange}
+                                        >
+                                            <option value="">Sélectionnez une heure</option>
+                                            {generateTimeOptions()}
+                                        </select>
+                                        {errors.heure_rdv && <div className="invalid-feedback">{errors.heure_rdv}</div>}
+                                    </div>
+                                    <div className="mb-3">
+                                        <label htmlFor="service" className="form-label">Service</label>
+                                        <select
+                                            className={`form-control ${errors.type_service ? 'is-invalid' : ''}`}
+                                            id="service"
+                                            name="type_service"
+                                            value={formData.type_service}
+                                            onChange={handleChange}
+                                        >
+                                            <option value="">Sélectionnez Service</option>
+                                            {service.map((agenceObj, index) => (
+                                                <option key={index} value={agenceObj.service}>
+                                                    {agenceObj.service}
+                                                </option>
+                                            ))}
+                                        </select>
+                                        {errors.type_service && <div className="invalid-feedback">{errors.type_service}</div>}
+                                    </div>
+                                    <div className="mb-3">
+                                        <label htmlFor="agence" className="form-label">Choisir une agence</label>
+                                        <select
+                                            className={`form-control ${errors.agence ? 'is-invalid' : ''}`}
+                                            id="agence"
+                                            name="agence"
+                                            value={formData.agence}
+                                            onChange={handleChange}
+                                        >
+                                            <option value="">Sélectionnez une agence</option>
+                                            {agences.map((agenceObj, index) => (
+                                                <option key={index} value={agenceObj.agence}>
+                                                    {agenceObj.agence}
+                                                </option>
+                                            ))}
+                                        </select>
+                                        {errors.agence && <div className="invalid-feedback">{errors.agence}</div>}
+                                    </div>
 
-                                <div className="d-grid gap-2">
-                                    <button
-                                        type="submit"
-                                        className="btn btn-primary"
-                                        disabled={loading || appointmentTaken}
-                                    >
-                                        {loading ? 'Ajout en cours...' : 'Ajouter le rendez-vous'}
-                                    </button>
+                                    <div className="d-grid gap-2">
+                                        <button
+                                            type="submit"
+                                            className="btn btn-primary"
+                                            disabled={loading || appointmentTaken}
+                                        >
+                                            {loading ? 'Ajout en cours...' : 'Ajouter le rendez-vous'}
+                                        </button>
 
-                                </div>
-                            </form>
+                                    </div>
+                                </form>
+                            </div>
                         </div>
                     </div>
-                </div>
-                <div className="col-md-8 my-2">
-                    <div className="card shadow">
-                        <div className="card-body">
-                            <div className="d-grid gap-2">
-                                <button
-                                    type="button"
-                                    className="btn btn-primary"
-                                    onClick={downloadAppointmentInfo}
-                                    disabled={!appointmentTaken}
-                                >
-                                    Telecharger rendez-vous
-                                </button>
-                                <button
-                                    type="button"
-                                    className="btn btn-outline-secondary"
-                                    onClick={() => navigate('/rendezvous')}
-                                >
-                                    Annuler
-                                </button>
+                    <div className="col-md-8 my-2">
+                        <div className="card shadow">
+                            <div className="card-body">
+                                <div className="d-grid gap-2">
+                                    <button
+                                        type="button"
+                                        className="btn btn-primary"
+                                        onClick={downloadAppointmentInfo}
+                                        disabled={!appointmentTaken}
+                                    >
+                                        Telecharger rendez-vous
+                                    </button>
+                                    <button
+                                        type="button"
+                                        className="btn btn-outline-secondary"
+                                        onClick={() => navigate('/rendezvous')}
+                                    >
+                                        Annuler
+                                    </button>
+                                </div>
                             </div>
                         </div>
                     </div>
                 </div>
             </div>
-        </div>
+        </>
     );
 }
