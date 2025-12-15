@@ -34,6 +34,7 @@ jobs:
         env:
           SONAR_TOKEN: ${{ secrets.SONAR_TOKEN }}
           SONAR_HOST_URL: ${{ secrets.SONAR_HOST_URL }}
+          SONAR_SCANNER_JSON_PARAMS: "{}"
         with:
           args: >
             "-Dsonar.projectKey=reservation-rendez-vous-cimr"
@@ -45,6 +46,27 @@ jobs:
             "-Dsonar.sourceEncoding=UTF-8"
             "-Dsonar.exclusions=**/node_modules/**,**/build/**,**/dist/**,**/coverage/**,frontend/public/**,backend/database/**,backend/.vscode/**"
             "-Dsonar.javascript.lcov.reportPaths=frontend/coverage/lcov.info"
+      - name: Validate Sonar secrets
+        env:
+          SONAR_TOKEN: ${{ secrets.SONAR_TOKEN }}
+          SONAR_HOST_URL: ${{ secrets.SONAR_HOST_URL }}
+          SONAR_ORGANIZATION: itsaliiiiiiii
+        run: |
+          set -e
+          if [ -z "$SONAR_TOKEN" ]; then
+            echo "::error::Missing SONAR_TOKEN secret"
+            exit 1
+          fi
+          if [ -z "$SONAR_HOST_URL" ]; then
+            echo "::error::Missing SONAR_HOST_URL secret (use https://sonarcloud.io for SonarCloud)"
+            exit 1
+          fi
+          if echo "$SONAR_HOST_URL" | grep -qi "sonarcloud.io"; then
+            if [ -z "$SONAR_ORGANIZATION" ]; then
+              echo "::error::Missing SONAR_ORGANIZATION secret for SonarCloud"
+              exit 1
+            fi
+          fi
 
       - name: SonarQube Quality Gate
         uses: sonarsource/sonarqube-quality-gate-action@v1.1.0
