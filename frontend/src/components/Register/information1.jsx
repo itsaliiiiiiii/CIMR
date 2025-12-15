@@ -82,13 +82,13 @@ export default function Information1() {
             newErrors.prenom = 'Le prénom doit contenir au moins 3 caractères';
         }
 
-        if (!formData.pays) {
-            newErrors.pays = 'Le pays est requis';
-        }
+        // if (!formData.pays) {
+        //     newErrors.pays = 'Le pays est requis';
+        // }
 
-        if (!formData.ville) {
-            newErrors.ville = 'La ville est requise';
-        }
+        // if (!formData.ville) {
+        //     newErrors.ville = 'La ville est requise';
+        // }
 
         if (!formData.date_naissance) {
             newErrors.date_naissance = 'La date de naissance est requise';

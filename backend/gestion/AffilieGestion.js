@@ -77,7 +77,7 @@ const generateMatricule = (nom, prenom, date_naissance) => {
 async function creerAffilie(nom, prenom, email, date_naissance, numero_telephone,
     pays, ville, type_identite, numero_identite) {
     try {
-        if (!nom || !prenom || !email || !date_naissance || !numero_telephone || !pays || !ville || !type_identite || !numero_identite) {
+        if (!nom || !prenom || !email || !date_naissance || !numero_telephone  || !type_identite || !numero_identite) {
             return res.status(400).json({ message: 'Tous les champs sont requis' });
         }
 
