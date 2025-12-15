@@ -30,20 +30,21 @@ jobs:
         run: npm test -- --coverage --watchAll=false --passWithNoTests
 
       - name: SonarQube Scan
-        uses: sonarsource/sonarqube-scan-action@v4.2
+        uses: sonarsource/sonarqube-scan-action@v6
         env:
           SONAR_TOKEN: ${{ secrets.SONAR_TOKEN }}
           SONAR_HOST_URL: ${{ secrets.SONAR_HOST_URL }}
         with:
           args: >
-            -Dsonar.projectKey=reservation-rendez-vous-cimr
-            -Dsonar.projectName=reservation-rendez-vous-cimr
-            -Dsonar.sources=backend,frontend/src
-            -Dsonar.tests=frontend/src
-            -Dsonar.test.inclusions=frontend/src/**/*.test.js,frontend/src/**/*.spec.js
-            -Dsonar.sourceEncoding=UTF-8
-            -Dsonar.exclusions=**/node_modules/**,**/build/**,**/dist/**,**/coverage/**,frontend/public/**,backend/database/**,backend/.vscode/**
-            -Dsonar.javascript.lcov.reportPaths=frontend/coverage/lcov.info
+            "-Dsonar.projectKey=reservation-rendez-vous-cimr"
+            "-Dsonar.projectName=reservation-rendez-vous-cimr"
+            "-Dsonar.organization=${{ secrets.SONAR_ORGANIZATION }}"
+            "-Dsonar.sources=backend,frontend/src"
+            "-Dsonar.tests=frontend/src"
+            "-Dsonar.test.inclusions=frontend/src/**/*.test.js,frontend/src/**/*.spec.js"
+            "-Dsonar.sourceEncoding=UTF-8"
+            "-Dsonar.exclusions=**/node_modules/**,**/build/**,**/dist/**,**/coverage/**,frontend/public/**,backend/database/**,backend/.vscode/**"
+            "-Dsonar.javascript.lcov.reportPaths=frontend/coverage/lcov.info"
 
       - name: SonarQube Quality Gate
         uses: sonarsource/sonarqube-quality-gate-action@v1.1.0
